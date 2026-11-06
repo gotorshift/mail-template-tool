@@ -244,12 +244,10 @@
                     <div id="authMethodEdu" class="check-box-group">
                         <label class="check-item"><input type="checkbox" value="faceWinEdu" checked onchange="togglePalmShipmentFields(); generate();">顔認証（Windows版）</label>
                         <label class="check-item"><input type="checkbox" value="faceIpadEdu" onchange="togglePalmShipmentFields(); generate();">顔認証（iPad版）</label>
-                        <label class="check-item"><input type="checkbox" value="faceMobileEdu" onchange="togglePalmShipmentFields(); generate();">顔認証（モバイル版）</label>
                         <label class="check-item"><input type="checkbox" value="faceunknownEdu" onchange="togglePalmShipmentFields(); generate();">顔認証（不明）</label>
                         <label class="check-item"><input type="checkbox" value="palmWinEdu" onchange="togglePalmShipmentFields(); generate();">手のひら静脈（Windows版）</label>
                         <label class="check-item"><input type="checkbox" value="icWinEdu" onchange="togglePalmShipmentFields(); generate();">カメレオンコード（Windows版）</label>
                         <label class="check-item"><input type="checkbox" value="icIpadEdu" onchange="togglePalmShipmentFields(); generate();">カメレオンコード（iPad版）</label>
-                        <label class="check-item"><input type="checkbox" value="icMobileEdu" onchange="togglePalmShipmentFields(); generate();">カメレオンコード（モバイル版）</label>
                         <label class="check-item"><input type="checkbox" value="icunknownEdu" onchange="togglePalmShipmentFields(); generate();">カメレオンコード（不明）</label>
                     </div>
                 </div>
@@ -355,12 +353,10 @@
                     <div id="authMethod" class="check-box-group">
                         <label class="check-item"><input type="checkbox" value="faceWin" checked onchange="toggleColorecoPalmShipmentFields(); generate();">顔認証（Windows版）</label>
                         <label class="check-item"><input type="checkbox" value="faceIpad" onchange="toggleColorecoPalmShipmentFields(); generate();">顔認証（iPad版）</label>
-                        <label class="check-item"><input type="checkbox" value="faceMobile" onchange="toggleColorecoPalmShipmentFields(); generate();">顔認証（モバイル版）</label>
                         <label class="check-item"><input type="checkbox" value="faceunknown" onchange="toggleColorecoPalmShipmentFields(); generate();"><span data-auth-label="faceunknown">顔認証（不明）</span></label>
                         <label class="check-item"><input type="checkbox" value="palmWin" onchange="toggleColorecoPalmShipmentFields(); generate();">手のひら静脈（Windows版）</label>
                         <label class="check-item"><input type="checkbox" value="icWin" onchange="toggleColorecoPalmShipmentFields(); generate();">カメレオンコード（Windows版）</label>
                         <label class="check-item"><input type="checkbox" value="icIpad" onchange="toggleColorecoPalmShipmentFields(); generate();">カメレオンコード（iPad版）</label>
-                        <label class="check-item"><input type="checkbox" value="icMobile" onchange="toggleColorecoPalmShipmentFields(); generate();">カメレオンコード（モバイル版）</label>
                         <label class="check-item"><input type="checkbox" value="icunknown" onchange="toggleColorecoPalmShipmentFields(); generate();">カメレオンコード（不明）</label>
                     </div>
                 </div>
@@ -1139,7 +1135,7 @@ function generate() {
         mail += ` ${stepIdx = stepIdx + 1}）カラ・レコ操作教育カリキュラムテンプレート\n →当日実施させていただく操作指導内容となります。\n\n`;
         mail += `   前半はインストール作業となるため30分ほどご同席をお願いいたします。\n   後半は操作説明となるためご同席をお願いいたします。\n\n`;
 
-        if(hasAuth('faceWin') || hasAuth('faceIpad') || hasAuth('faceunknown') || hasAuth('faceMobile')) {
+        if(hasAuth('faceWin') || hasAuth('faceIpad') || hasAuth('faceunknown')) {
             mail += ` ${stepIdx = stepIdx + 1}）顔登録時の注意点\n\n`
         };
 
@@ -1167,7 +1163,6 @@ function generate() {
 
         const needsWindowsDevice = hasAuth('faceWin') || hasAuth('palmWin') || hasAuth('icWin') || hasAuth('faceunknown') || hasAuth('icunknown');
         const needsIpadDevice = hasAuth('faceIpad') || hasAuth('icIpad') || hasAuth('faceunknown') || hasAuth('icunknown');
-        const needsMobileDevice = hasAuth('faceMobile') || hasAuth('icMobile');
         if(needsWindowsDevice) {
             mail += ` ${stepPreIdx = stepPreIdx + 1}）打刻端末（WindowsPC）のご準備\n→当日は打刻端末を１台ご用意ください。\n\n`;
         }
@@ -1176,9 +1171,6 @@ function generate() {
             mail += `※事前にApple Accountの取得をお願いいたします。\n取得方法（Apple Supportサイト）\n`;
             mail += `https://support.apple.com/ja-jp/108647?device-type=iphone\n\n`;
         }
-        if(needsMobileDevice) {
-            mail += ` ${stepPreIdx = stepPreIdx + 1}）モバイル端末のご準備\n→当日はモバイル端末をご用意ください。\n\n`;
-        }
 
         if(temperatureCheck) {
             mail += ` ${stepPreIdx = stepPreIdx + 1}）バイタルチェック検知器について\n →バイタルチェック検知器のご準備をお願いいたします。\n\n`;
@@ -1186,7 +1178,7 @@ function generate() {
             mail += ` ${stepPreIdx = stepPreIdx + 1}）アルコールチェック検知器について\n →アルコールチェック検知器のご準備をお願いいたします。\n\n`;
         }
 
-        if(alc && (hasAuth('faceWin') || hasAuth('faceIpad') || hasAuth('faceunknown') || hasAuth('faceMobile'))) {
+        if(alc && (hasAuth('faceWin') || hasAuth('faceIpad') || hasAuth('faceunknown'))) {
                 mail += ` ${stepPreIdx = stepPreIdx + 1}）ICカードリーダー（免許証有効期限管理用）のご準備\n →免許証有効期限管理をご利用になりたい場合、\n  ICカードリーダーのご準備をお願いいたします。\n  ※免許証有効期限管理を利用されない場合、ご準備は不要です。\n\n`;
                 mail += ` ＜推奨機器＞\n ■ソニー社製　PaSoRi （RC-S300）\n  https://www.iodata.jp/product/interface/iccardreader/ble-nfc/\n\n`;
 
@@ -1605,7 +1597,6 @@ function generate() {
 
                 const needsWindowsDevice = hasAuth('faceWinEdu') || hasAuth('palmWinEdu') || hasAuth('icWinEdu') || hasAuth('faceunknownEdu') || hasAuth('icunknownEdu');
                 const needsIpadDevice = hasAuth('faceIpadEdu') || hasAuth('icIpadEdu') || hasAuth('faceunknownEdu') || hasAuth('icunknownEdu');
-                const needsMobileDevice = hasAuth('faceMobileEdu') || hasAuth('icMobileEdu');
                 if (needsWindowsDevice) {
                     preparationIndex++;
                     mail += `${preparationIndex}）打刻端末（WindowsPC）のご準備\n`;
@@ -1619,13 +1610,8 @@ function generate() {
                     mail += `取得方法（Apple Supportサイト）\n`;
                     mail += `https://support.apple.com/ja-jp/108647?device-type=iphone\n\n`;
                 }
-                if (needsMobileDevice) {
-                    preparationIndex++;
-                    mail += `${preparationIndex}）モバイル端末のご準備\n`;
-                    mail += `→当日はモバイル端末をご用意ください。\n\n`;
-                }
 
-                if (alcNotice && (hasAuth('faceWinEdu') || hasAuth('faceIpadEdu') || hasAuth('faceunknownEdu') || hasAuth('faceMobileEdu'))) {
+                if (alcNotice && (hasAuth('faceWinEdu') || hasAuth('faceIpadEdu') || hasAuth('faceunknownEdu'))) {
                         preparationIndex++;
                         mail += `${preparationIndex}）バイタルチェック検知器について\n`;
                         mail += ` →バイタルチェック検知器のご準備をお願いいたします。\n\n`;
