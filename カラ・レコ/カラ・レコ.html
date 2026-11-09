@@ -1552,7 +1552,6 @@ function generate() {
             const sDay = sDateRaw ? `（${getDayOfWeek(sDateRaw, true)}）` : "";
             const evStart = formatJapanDate(val('eduEvalStart')) || "[20●●年●月●日]";
             const evEnd = formatJapanDate(val('eduEvalEnd')) || "[20●●年●月●日]";
-            const authName = getAuthenticationMethodLabels(authMethods, 'Edu').join('、');
             const palmDateText = (id, placeholder) => {
                 const date = val(id);
                 return date ? `${formatMonthDay(date)}（${getDayOfWeek(date, true)}）` : placeholder;
@@ -1592,9 +1591,6 @@ function generate() {
             mail += `・ログインURL\n${val('eduLoginUrl') || "[ログインURL]"}\n\n`;
             mail += `・admin管理者ユーザID ：${val('eduAdminId') || "[管理者ユーザID]"}\n`;
             mail += `・admin管理者パスワード：${val('eduAdminPw') || "[管理者パスワード]"}\n`;
-            if (authName) {
-                mail += `・打刻認証方法：${authName}\n`;
-            }
             const mobilePunchLabel = getMobilePunchLabel(authMethods, 'Edu');
             if (mobilePunchLabel) {
                 mail += `・企業ID（モバイル版）：${val('eduMobileCompanyId') || "[企業ID（モバイル版）]"}\n`;
