@@ -40,6 +40,14 @@
         .check-box-group { background: #eef6ff; padding: 15px; border-radius: 4px; margin-top: 5px; font-size: 0.9em; }
         .check-item { margin-bottom: 5px; display: flex; align-items: center; }
         .check-item input { width: auto; margin-right: 8px; }
+        .auth-method-category { display: grid; grid-template-columns: 9em minmax(0, 1fr); align-items: start; margin-bottom: 4px; }
+        .auth-method-category-title { font-weight: bold; white-space: nowrap; }
+        .auth-method-options { display: flex; flex-wrap: wrap; gap: 0 12px; }
+        .auth-method-category .check-item { margin-bottom: 0; min-height: 22px; }
+        @media (max-width: 700px) {
+            .auth-method-category { grid-template-columns: 1fr; }
+            .auth-method-options { margin-left: 12px; }
+        }
         .v-input { width: 100px; padding: 3px; margin-left: auto; font-size: 0.9em; }
         .disabled-label { color: #aaa; text-decoration: line-through; }
         .radio-group { display: flex; gap: 15px; background: #fff3cd; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
@@ -239,16 +247,39 @@
                         <option value="kinro_shishiEdu">勤労の獅子</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>打刻認証方法</label>
-                    <div id="authMethodEdu" class="check-box-group">
-                        <label class="check-item"><input type="checkbox" value="faceWinEdu" checked onchange="togglePalmShipmentFields(); generate();">顔認証（Windows版）</label>
-                        <label class="check-item"><input type="checkbox" value="faceIpadEdu" onchange="togglePalmShipmentFields(); generate();">顔認証（iPad版）</label>
-                        <label class="check-item"><input type="checkbox" value="faceunknownEdu" onchange="togglePalmShipmentFields(); generate();">顔認証（不明）</label>
-                        <label class="check-item"><input type="checkbox" value="palmWinEdu" onchange="togglePalmShipmentFields(); generate();">手のひら静脈（Windows版）</label>
-                        <label class="check-item"><input type="checkbox" value="icWinEdu" onchange="togglePalmShipmentFields(); generate();">カメレオンコード（Windows版）</label>
-                        <label class="check-item"><input type="checkbox" value="icIpadEdu" onchange="togglePalmShipmentFields(); generate();">カメレオンコード（iPad版）</label>
-                        <label class="check-item"><input type="checkbox" value="icunknownEdu" onchange="togglePalmShipmentFields(); generate();">カメレオンコード（不明）</label>
+            </div>
+            <div class="form-group">
+                <label>打刻認証方法</label>
+                <div id="authMethodEdu" class="check-box-group">
+                    <div class="auth-method-category">
+                        <div class="auth-method-category-title">顔認証</div>
+                        <div class="auth-method-options">
+                            <label class="check-item"><input type="checkbox" value="faceWinEdu" checked onchange="togglePalmShipmentFields(); generate();">Windows版</label>
+                            <label class="check-item"><input type="checkbox" value="faceIpadEdu" onchange="togglePalmShipmentFields(); generate();">iPad版</label>
+                            <label class="check-item"><input type="checkbox" value="faceunknownEdu" onchange="togglePalmShipmentFields(); generate();">不明</label>
+                        </div>
+                    </div>
+                    <div class="auth-method-category">
+                        <div class="auth-method-category-title">手のひら静脈</div>
+                        <div class="auth-method-options">
+                            <label class="check-item"><input type="checkbox" value="palmWinEdu" onchange="togglePalmShipmentFields(); generate();">Windows版</label>
+                        </div>
+                    </div>
+                    <div class="auth-method-category">
+                        <div class="auth-method-category-title">カメレオンコード</div>
+                        <div class="auth-method-options">
+                            <label class="check-item"><input type="checkbox" value="icWinEdu" onchange="togglePalmShipmentFields(); generate();">Windows版</label>
+                            <label class="check-item"><input type="checkbox" value="icIpadEdu" onchange="togglePalmShipmentFields(); generate();">iPad版</label>
+                            <label class="check-item"><input type="checkbox" value="icunknownEdu" onchange="togglePalmShipmentFields(); generate();">不明</label>
+                        </div>
+                    </div>
+                    <div class="auth-method-category">
+                        <div class="auth-method-category-title">モバイル打刻</div>
+                        <div class="auth-method-options">
+                            <label class="check-item"><input type="checkbox" value="mobileIphoneEdu" onchange="togglePalmShipmentFields(); generate();">iPhone</label>
+                            <label class="check-item"><input type="checkbox" value="mobileAndroidEdu" onchange="togglePalmShipmentFields(); generate();">Android</label>
+                            <label class="check-item"><input type="checkbox" value="mobileUnknownEdu" onchange="togglePalmShipmentFields(); generate();">不明</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -301,6 +332,10 @@
                     <div class="form-group"><label>管理者ユーザID</label><input type="text" id="eduAdminId" placeholder="admin" oninput="generate()"></div>
                     <div class="form-group"><label>管理者パスワード</label><input type="text" id="eduAdminPw" oninput="generate()"></div>
                 </div>
+                <div id="edu-mobile-company-id-field" class="form-group hidden">
+                    <label>企業ID（モバイル版）</label>
+                    <input type="text" id="eduMobileCompanyId" oninput="generate()">
+                </div>
             </div>
 
             <div id="reply-edu">
@@ -348,16 +383,39 @@
                         <option value="kinro_shishi">勤労の獅子</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>打刻認証方法</label>
-                    <div id="authMethod" class="check-box-group">
-                        <label class="check-item"><input type="checkbox" value="faceWin" checked onchange="toggleColorecoPalmShipmentFields(); generate();">顔認証（Windows版）</label>
-                        <label class="check-item"><input type="checkbox" value="faceIpad" onchange="toggleColorecoPalmShipmentFields(); generate();">顔認証（iPad版）</label>
-                        <label class="check-item"><input type="checkbox" value="faceunknown" onchange="toggleColorecoPalmShipmentFields(); generate();"><span data-auth-label="faceunknown">顔認証（不明）</span></label>
-                        <label class="check-item"><input type="checkbox" value="palmWin" onchange="toggleColorecoPalmShipmentFields(); generate();">手のひら静脈（Windows版）</label>
-                        <label class="check-item"><input type="checkbox" value="icWin" onchange="toggleColorecoPalmShipmentFields(); generate();">カメレオンコード（Windows版）</label>
-                        <label class="check-item"><input type="checkbox" value="icIpad" onchange="toggleColorecoPalmShipmentFields(); generate();">カメレオンコード（iPad版）</label>
-                        <label class="check-item"><input type="checkbox" value="icunknown" onchange="toggleColorecoPalmShipmentFields(); generate();">カメレオンコード（不明）</label>
+            </div>
+            <div class="form-group">
+                <label>打刻認証方法</label>
+                <div id="authMethod" class="check-box-group">
+                    <div class="auth-method-category">
+                        <div class="auth-method-category-title">顔認証</div>
+                        <div class="auth-method-options">
+                            <label class="check-item"><input type="checkbox" value="faceWin" checked onchange="toggleColorecoPalmShipmentFields(); generate();">Windows版</label>
+                            <label class="check-item"><input type="checkbox" value="faceIpad" onchange="toggleColorecoPalmShipmentFields(); generate();">iPad版</label>
+                            <label class="check-item"><input type="checkbox" value="faceunknown" onchange="toggleColorecoPalmShipmentFields(); generate();"><span data-auth-label="faceunknown">不明</span></label>
+                        </div>
+                    </div>
+                    <div class="auth-method-category">
+                        <div class="auth-method-category-title">手のひら静脈</div>
+                        <div class="auth-method-options">
+                            <label class="check-item"><input type="checkbox" value="palmWin" onchange="toggleColorecoPalmShipmentFields(); generate();">Windows版</label>
+                        </div>
+                    </div>
+                    <div class="auth-method-category">
+                        <div class="auth-method-category-title">カメレオンコード</div>
+                        <div class="auth-method-options">
+                            <label class="check-item"><input type="checkbox" value="icWin" onchange="toggleColorecoPalmShipmentFields(); generate();">Windows版</label>
+                            <label class="check-item"><input type="checkbox" value="icIpad" onchange="toggleColorecoPalmShipmentFields(); generate();">iPad版</label>
+                            <label class="check-item"><input type="checkbox" value="icunknown" onchange="toggleColorecoPalmShipmentFields(); generate();">不明</label>
+                        </div>
+                    </div>
+                    <div class="auth-method-category">
+                        <div class="auth-method-category-title">モバイル打刻</div>
+                        <div class="auth-method-options">
+                            <label class="check-item"><input type="checkbox" value="mobileIphone" onchange="toggleColorecoPalmShipmentFields(); generate();">iPhone</label>
+                            <label class="check-item"><input type="checkbox" value="mobileAndroid" onchange="toggleColorecoPalmShipmentFields(); generate();">Android</label>
+                            <label class="check-item"><input type="checkbox" value="mobileUnknown" onchange="toggleColorecoPalmShipmentFields(); generate();">不明</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -438,6 +496,10 @@
             <div class="row">
                 <div class="form-group"><label>管理者ユーザID</label><input type="text" id="adminId" oninput="generate()"></div>
                 <div class="form-group"><label>管理者パスワード</label><input type="text" id="adminPw" oninput="generate()"></div>
+            </div>
+            <div id="mobile-company-id-field" class="form-group hidden">
+                <label>企業ID（モバイル版）</label>
+                <input type="text" id="mobileCompanyId" oninput="generate()">
             </div>
             </div>
         </div>
@@ -613,8 +675,12 @@ function toggleSetupFields() {
 function togglePalmShipmentFields() {
     const authEl = document.getElementById('authMethodEdu');
     const shipmentDates = document.getElementById('palm-shipment-dates');
+    updateAuthenticationOptions(authEl, 'Edu');
     const hasPalmAuth = authEl && authEl.querySelector('input[value="palmWinEdu"]').checked;
+    const hasMobilePunch = authEl && authEl.querySelector('input[value^="mobile"][type="checkbox"]:checked');
+    const mobileCompanyIdField = document.getElementById('edu-mobile-company-id-field');
     if (shipmentDates) shipmentDates.classList.toggle('hidden', !hasPalmAuth);
+    if (mobileCompanyIdField) mobileCompanyIdField.classList.toggle('hidden', !hasMobilePunch);
 }
 
 function toggleColorecoFields() {
@@ -624,7 +690,7 @@ function toggleColorecoFields() {
     if (typeEl) {
         if (noticeFields) noticeFields.classList.toggle('hidden', typeEl.value === 'followup');
         if (combinedFaceLabel) {
-            combinedFaceLabel.textContent = typeEl.value === 'followup' ? '顔認証（両方）' : '顔認証（不明）';
+            combinedFaceLabel.textContent = '不明';
         }
     }
     toggleColorecoPalmShipmentFields();
@@ -658,9 +724,38 @@ function toggleColorecoPalmShipmentFields() {
     const typeEl = document.querySelector('input[name="colorecoMailType"]:checked');
     const authEl = document.getElementById('authMethod');
     const shipmentDates = document.getElementById('coloreco-palm-shipment-dates');
+    updateAuthenticationOptions(authEl);
     const hasPalmAuth = authEl && authEl.querySelector('input[value="palmWin"]').checked;
+    const hasMobilePunch = authEl && authEl.querySelector('input[value^="mobile"][type="checkbox"]:checked');
+    const mobileCompanyIdField = document.getElementById('mobile-company-id-field');
     const shouldShow = typeEl && typeEl.value === 'notice' && hasPalmAuth;
+    const shouldShowMobileCompanyId = typeEl && typeEl.value === 'notice' && hasMobilePunch;
     if (shipmentDates) shipmentDates.classList.toggle('hidden', !shouldShow);
+    if (mobileCompanyIdField) mobileCompanyIdField.classList.toggle('hidden', !shouldShowMobileCompanyId);
+}
+
+function updateAuthenticationOptions(authEl, suffix = '') {
+    updateUnknownPlatformOptions(authEl, suffix, 'face', ['Win', 'Ipad']);
+    updateUnknownPlatformOptions(authEl, suffix, 'ic', ['Win', 'Ipad']);
+    updateUnknownPlatformOptions(authEl, suffix, 'mobile', ['Iphone', 'Android']);
+}
+
+function updateUnknownPlatformOptions(authEl, suffix, prefix, platforms) {
+    if (!authEl) return;
+    const platformInputs = platforms
+        .map(platform => authEl.querySelector(`input[value="${prefix}${platform}${suffix}"]`))
+        .filter(Boolean);
+    const unknownValue = prefix === 'mobile' ? `${prefix}Unknown${suffix}` : `${prefix}unknown${suffix}`;
+    const unknown = authEl.querySelector(`input[value="${unknownValue}"]`);
+    if (!platformInputs.length || !unknown) return;
+
+    const hasPlatform = platformInputs.some(input => input.checked);
+    platformInputs.forEach(input => {
+        input.disabled = unknown.checked;
+        input.parentElement.classList.toggle('disabled-label', input.disabled);
+    });
+    unknown.disabled = hasPlatform;
+    unknown.parentElement.classList.toggle('disabled-label', unknown.disabled);
 }
 
 function toggleVisitMethodFields() {
@@ -1034,6 +1129,32 @@ function generateColorecoFollowUpReply(cComp, cStaff, myName, auth, sysAuth) {
     };
 }
 
+function getMobilePunchLabel(authMethods, suffix = '') {
+    const platforms = [
+        `mobileIphone${suffix}`,
+        `mobileAndroid${suffix}`,
+        `mobileUnknown${suffix}`
+    ]
+        .some(value => authMethods.includes(value));
+    return platforms ? 'モバイル打刻' : '';
+}
+
+function getAuthenticationMethodLabels(authMethods, suffix = '') {
+    const labels = [];
+    if ([`faceWin${suffix}`, `faceIpad${suffix}`, `faceunknown${suffix}`].some(method => authMethods.includes(method))) {
+        labels.push('顔認証');
+    }
+    if (authMethods.includes(`palmWin${suffix}`)) {
+        labels.push('手のひら静脈');
+    }
+    if ([`icWin${suffix}`, `icIpad${suffix}`, `icunknown${suffix}`].some(method => authMethods.includes(method))) {
+        labels.push('カメレオンコード');
+    }
+    const mobilePunchLabel = getMobilePunchLabel(authMethods, suffix);
+    if (mobilePunchLabel) labels.push(mobilePunchLabel);
+    return labels;
+}
+
 // 自動反映
 function generate() {
     const val = (id) => {
@@ -1081,7 +1202,8 @@ function generate() {
         let stepIdx = 0;
         let stepPreIdx = 0;
 
-        const authName = Array.from(document.querySelectorAll('#authMethod input[type="checkbox"]:checked'), input => input.parentElement.textContent.trim()).join('、');
+        const authName = getAuthenticationMethodLabels(authMethods).join('、');
+        const mobilePunchLabel = getMobilePunchLabel(authMethods);
 
         mail = `${cComp}\n${cStaff}様\n\nお世話になっております。\n「カラ・レコ」開発元シフトの${myName}でございます。\n\n`;
         mail += `この度は弊社製品をご契約いただき誠にありがとうございます。\n\n`;
@@ -1223,7 +1345,11 @@ function generate() {
 
         mail += `------------------------------------------------------------------------\n■ アカウント情報\n------------------------------------------------------------------------\n\n`;
         mail += `・ログインURL\n${val('loginUrl') || "[ログインURL]"}\n\n`;
-        mail += `・admin管理者ユーザID：${val('adminId') || "[管理者ユーザID]"}\n・admin管理者パスワード：${val('adminPw') || "[管理者パスワード]"}\n\n`;
+        mail += `・admin管理者ユーザID：${val('adminId') || "[管理者ユーザID]"}\n・admin管理者パスワード：${val('adminPw') || "[管理者パスワード]"}\n`;
+        if (mobilePunchLabel) {
+            mail += `・企業ID（モバイル版）：${val('mobileCompanyId') || "[企業ID（モバイル版）]"}\n`;
+        }
+        mail += `\n`;
         mail += `------------------------------------------------------------------------\n■ アプリケーションインストールURL\n------------------------------------------------------------------------\n\n`;
 
         if(hasAuth('faceWin')) {
@@ -1426,6 +1552,7 @@ function generate() {
             const sDay = sDateRaw ? `（${getDayOfWeek(sDateRaw, true)}）` : "";
             const evStart = formatJapanDate(val('eduEvalStart')) || "[20●●年●月●日]";
             const evEnd = formatJapanDate(val('eduEvalEnd')) || "[20●●年●月●日]";
+            const authName = getAuthenticationMethodLabels(authMethods, 'Edu').join('、');
             const palmDateText = (id, placeholder) => {
                 const date = val(id);
                 return date ? `${formatMonthDay(date)}（${getDayOfWeek(date, true)}）` : placeholder;
@@ -1464,7 +1591,15 @@ function generate() {
             mail += `------------------------------------------------------------\n\n`;
             mail += `・ログインURL\n${val('eduLoginUrl') || "[ログインURL]"}\n\n`;
             mail += `・admin管理者ユーザID ：${val('eduAdminId') || "[管理者ユーザID]"}\n`;
-            mail += `・admin管理者パスワード：${val('eduAdminPw') || "[管理者パスワード]"}\n\n`;
+            mail += `・admin管理者パスワード：${val('eduAdminPw') || "[管理者パスワード]"}\n`;
+            if (authName) {
+                mail += `・打刻認証方法：${authName}\n`;
+            }
+            const mobilePunchLabel = getMobilePunchLabel(authMethods, 'Edu');
+            if (mobilePunchLabel) {
+                mail += `・企業ID（モバイル版）：${val('eduMobileCompanyId') || "[企業ID（モバイル版）]"}\n`;
+            }
+            mail += `\n`;
 
             mail += `------------------------------------------------------------\n`;
             mail += `■ アプリケーションインストールURL\n`;
