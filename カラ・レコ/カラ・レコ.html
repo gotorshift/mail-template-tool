@@ -237,14 +237,29 @@
             <div class="row">
                 <div class="form-group">
                     <label>連携システム</label>
-                    <select id="sysAuthMethodEdu" onchange="generate();">
+                    <select id="sysAuthMethodEdu" onchange="toggleXronosMethodFields('Edu'); generate();">
                         <option value="noneEdu" selected>なし</option>
                         <option value="bugyo_cloudEdu">奉行クラウド</option>
-                        <option value="xronos_apiEdu">クロノス（API連携）</option>
-                        <option value="xronos_autoEdu">クロノス（自動連携）</option>
+                        <option value="xronosEdu">クロノス</option>
                         <option value="daijin_autoEdu">就業大臣</option>
                         <option value="jinjerEdu">ジンジャー</option>
                         <option value="kinro_shishiEdu">勤労の獅子</option>
+                    </select>
+                </div>
+            </div>
+            <div id="xronos-methods-edu" class="row hidden">
+                <div class="form-group">
+                    <label for="xronosEmployeeMethodEdu">従業員</label>
+                    <select id="xronosEmployeeMethodEdu" onchange="updateXronosPunchMethods('Edu'); generate();">
+                        <option value="API" selected>API</option>
+                        <option value="CSV">CSV</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="xronosPunchMethodEdu">打刻</label>
+                    <select id="xronosPunchMethodEdu" onchange="generate();">
+                        <option value="API" selected>API</option>
+                        <option value="CSV">CSV</option>
                     </select>
                 </div>
             </div>
@@ -372,15 +387,29 @@
             <div class="row">
                 <div class="form-group">
                     <label>連携システム</label>
-                    <select id="sysAuthMethod" onchange="generate();">
+                    <select id="sysAuthMethod" onchange="toggleXronosMethodFields(); generate();">
                         <option value="none" selected>なし</option>
                         <option value="bugyo_cloud">奉行クラウド</option>
-                        <option value="xronos_api_full">クロノス（API：従業員+打刻）</option>
-                        <option value="xronos_auto">クロノス（CSV：従業員+打刻）</option>
-                        <option value="xronos_api">クロノス（API：従業員 ／CSV：打刻）</option>
+                        <option value="xronos">クロノス</option>
                         <option value="daijin_auto">就業大臣</option>
                         <option value="jinjer">ジンジャー</option>
                         <option value="kinro_shishi">勤労の獅子</option>
+                    </select>
+                </div>
+            </div>
+            <div id="xronos-methods" class="row hidden">
+                <div class="form-group">
+                    <label for="xronosEmployeeMethod">従業員</label>
+                    <select id="xronosEmployeeMethod" onchange="updateXronosPunchMethods(); generate();">
+                        <option value="API" selected>API</option>
+                        <option value="CSV">CSV</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="xronosPunchMethod">打刻</label>
+                    <select id="xronosPunchMethod" onchange="generate();">
+                        <option value="API" selected>API</option>
+                        <option value="CSV">CSV</option>
                     </select>
                 </div>
             </div>
@@ -669,7 +698,24 @@ function toggleSetupFields() {
     if (noticeBox) noticeBox.classList.toggle('hidden', type !== 'noticeEdu');
     if (replyWrapper) replyWrapper.classList.toggle('hidden', type !== 'replyEdu');
     if (replyPanel) replyPanel.classList.toggle('hidden', type !== 'replyEdu');
+    toggleXronosMethodFields('Edu');
     togglePalmShipmentFields();
+}
+
+function toggleXronosMethodFields(suffix = '') {
+    const systemSelect = document.getElementById(`sysAuthMethod${suffix}`);
+    const methodFields = document.getElementById(suffix === 'Edu' ? 'xronos-methods-edu' : 'xronos-methods');
+    methodFields.classList.toggle('hidden', systemSelect.value !== `xronos${suffix}`);
+    updateXronosPunchMethods(suffix);
+}
+
+function updateXronosPunchMethods(suffix = '') {
+    const employeeMethod = document.getElementById(`xronosEmployeeMethod${suffix}`);
+    const punchMethod = document.getElementById(`xronosPunchMethod${suffix}`);
+    const punchApiOption = punchMethod.querySelector('option[value="API"]');
+    const employeeUsesCsv = employeeMethod.value === 'CSV';
+    punchApiOption.disabled = employeeUsesCsv;
+    if (employeeUsesCsv) punchMethod.value = 'CSV';
 }
 
 function togglePalmShipmentFields() {
@@ -693,6 +739,7 @@ function toggleColorecoFields() {
             combinedFaceLabel.textContent = '不明';
         }
     }
+    toggleXronosMethodFields();
     toggleColorecoPalmShipmentFields();
 }
 
@@ -1181,9 +1228,16 @@ function generate() {
 
     // 操作指導
     if(currentTab === 'coloreco') {
+        let sysAuth = val('sysAuthMethod');
+        if (sysAuth === 'xronos') {
+            const employeeMethod = val('xronosEmployeeMethod');
+            const punchMethod = val('xronosPunchMethod');
+            sysAuth = employeeMethod === 'CSV' ? 'xronos_auto'
+                : punchMethod === 'CSV' ? 'xronos_api' : 'xronos_api_full';
+        }
         const mailTypeEl = document.querySelector('input[name="colorecoMailType"]:checked');
         if (mailTypeEl && mailTypeEl.value === 'followup') {
-            const result = generateColorecoFollowUpReply(cComp, cStaff, myName, selectedValues('authMethod'), val('sysAuthMethod'));
+            const result = generateColorecoFollowUpReply(cComp, cStaff, myName, selectedValues('authMethod'), sysAuth);
             document.getElementById('output-subject').value = result.subject;
             document.getElementById('output').value = result.mail;
             return;
@@ -1195,7 +1249,6 @@ function generate() {
         const vDateFile = vDateRaw.replace(/-/g, '');
         let authMethods = selectedValues('authMethod');
         let hasAuth = (method) => authMethods.includes(method);
-        let sysAuth = val('sysAuthMethod');
         let alc = isChked('optAlcohol');
         let alcoholCheck = alc && isChked('optVitalAlcohol');
         let temperatureCheck = alc && isChked('optVitalTemperature');
@@ -1294,6 +1347,12 @@ function generate() {
             mail += `https://support.apple.com/ja-jp/108647?device-type=iphone\n\n`;
         }
 
+        mail += ` ${stepPreIdx = stepPreIdx + 1}）打刻端末がインターネットに接続できる環境をご用意ください。\n\n`;
+
+        if(hasAuth('palmWin')) {
+            mail += ` ${stepPreIdx = stepPreIdx + 1}）手のひら静脈センサーのご準備\n\n`;
+        }
+
         if(temperatureCheck) {
             mail += ` ${stepPreIdx = stepPreIdx + 1}）バイタルチェック検知器について\n →バイタルチェック検知器のご準備をお願いいたします。\n\n`;
         } else if(alcoholCheck) {
@@ -1308,12 +1367,6 @@ function generate() {
                 mail += `   打刻端末がWindowsの場合、Bluetooth通信が行えるかご確認ください。\n  ※Bluetooth(r) Ver5.0以上 Low Energy（BLE）対応のもの\n  ※Bluetooth通信ができない場合、無線レシーバーをご準備ください。\n`;
                 mail += `   動作確認済機器（BUFFALO社製：BSBT5D200BK）\n   https://www.buffalo.jp/product/detail/bsbt5d200bk.html\n\n`;
         }
-
-        if(hasAuth('palmWin')) {
-            mail += ` ${stepPreIdx = stepPreIdx + 1}）手のひら静脈センサーのご準備\n\n`;
-        }
-
-        mail += ` ${stepPreIdx = stepPreIdx + 1}）打刻端末がインターネットに接続できる環境をご用意ください。\n\n`;
 
         // 連携システム
         if (sysAuth === 'xronos_api' || sysAuth === 'xronos_api_full' || sysAuth === 'xronos_auto') {
@@ -1382,22 +1435,25 @@ function generate() {
             mail += `・iPad版打刻アプリ（カメレオンコード）\n AppStoreより「coloreco-勤怠打刻のリアルタイム一元管理」をインストールしてください。\n\n`;
         }
 
+        if(hasAuth('mobileIphone')) {
+            mail += `・モバイル打刻アプリケーション\n AppStoreより「カラ・レコ -モバイル打刻-」をインストールしてください。\n\n`;
+        }
+
+        if(hasAuth('mobileAndroid')) {
+            mail += `・モバイル打刻アプリケーション\n GooglePlayより「カラ・レコ -モバイル打刻-」をインストールしてください。\n\n`;
+        }
+
         // 自動連携
         if(sysAuth == 'obc_auto') {
             mail += `・自動連携アプリケーション（就業奉行）\n https://sdk.shift-cc.com/coloreco-autoconnectionapp/Publish.html\n\n`;
         } else if(sysAuth == 'daijin_auto') {
             mail += `・自動連携アプリケーション（就業大臣）\n https://sdk.shift-cc.com/coloreco-autoconnectionapp-daijin/Publish.html\n\n`;
-        } else if(sysAuth == 'xronos_auto') {
+        } else if(sysAuth == 'xronos_auto' || sysAuth == 'xronos_api') {
             mail += `・自動連携アプリケーション（Xronos）\n https://sdk.shift-cc.com/coloreco-autoconnectionapp-xronos/Publish.html\n\n`;
         }
 
         mail += `------------------------------------------------------------------------\n■ 各種マニュアル\n------------------------------------------------------------------------\n\n`;
 
-        if (sysAuth === 'xronos_api') {
-            mail += `・管理者マニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_WebManagement.pdf\n\n`;
-            mail += `・Windows版打刻アプリケーション（顔認証）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_Windows_face.pdf\n\n`;
-            mail += `・自動連携アプリケーション（Xronos）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_AutoConnection_forDaijin.pdf\n\n`;
-        } else {
             mail += `・管理者マニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_WebManagement.pdf\n\n`;
 
             if(hasAuth('faceWin')) {
@@ -1435,10 +1491,9 @@ function generate() {
                 mail += `・自動連携アプリケーション（就業奉行）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_AutoConnection.pdf\n\n`;
             } else if(sysAuth == 'daijin_auto') {
                 mail += `・自動連携アプリケーション（就業大臣）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_AutoConnection_forDaijin.pdf\n\n`;
-            } else if(sysAuth == 'xronos_auto') {
+            } else if(sysAuth == 'xronos_auto' || sysAuth == 'xronos_api') {
                 mail += `・自動連携アプリケーション（Xronos）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_AutoConnection_forDaijin.pdf\n\n`;
             }
-        }
 
         if(alc) {
             mail += `・アルコール検査機能マニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_AlcoholInspection.pdf\n\n`;
@@ -1542,6 +1597,9 @@ function generate() {
         let authMethods = selectedValues('authMethodEdu');
         let hasAuth = (method) => authMethods.includes(method);
         let sysAuth = val('sysAuthMethodEdu');
+        let xronosEmployeeMethod = val('xronosEmployeeMethodEdu') || 'API';
+        let xronosPunchMethod = val('xronosPunchMethodEdu') || 'API';
+        let xronosUsesCsv = sysAuth === 'xronosEdu' && (xronosEmployeeMethod === 'CSV' || xronosPunchMethod === 'CSV');
         let alcNotice = isChked('optAlcoholNoticeEdu');
 
         subject = "【カラ・レコ】アカウント発行のお知らせ及び初回設定サポートのご案内";
@@ -1631,12 +1689,20 @@ function generate() {
             mail += `・iPad版打刻アプリ（カメレオンコード）\n AppStoreより「coloreco-勤怠打刻のリアルタイム一元管理」をインストールしてください。\n\n`;
         }
 
+        if(hasAuth('mobileIphoneEdu')) {
+            mail += `・モバイル打刻アプリケーション\n AppStoreより「カラ・レコ -モバイル打刻-」をインストールしてください。\n\n`;
+        }
+
+        if(hasAuth('mobileAndroidEdu')) {
+            mail += `・モバイル打刻アプリケーション\n GooglePlayより「カラ・レコ -モバイル打刻-」をインストールしてください。\n\n`;
+        }
+
         // 自動連携
         if(sysAuth == 'obc_autoEdu') {
             mail += `・自動連携アプリケーション（就業奉行）\n https://sdk.shift-cc.com/coloreco-autoconnectionapp/Publish.html\n\n`;
         } else if(sysAuth == 'daijin_autoEdu') {
             mail += `・自動連携アプリケーション（就業大臣）\n https://sdk.shift-cc.com/coloreco-autoconnectionapp-daijin/Publish.html\n\n`;
-        } else if(sysAuth == 'xronos_autoEdu') {
+        } else if(xronosUsesCsv) {
             mail += `・自動連携アプリケーション（Xronos）\n https://sdk.shift-cc.com/coloreco-autoconnectionapp-xronos/Publish.html\n\n`;
         }
 
@@ -1681,7 +1747,7 @@ function generate() {
             mail += `・自動連携アプリケーション（就業奉行）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_AutoConnection.pdf\n\n`;
         } else if(sysAuth == 'daijin_autoEdu') {
             mail += `・自動連携アプリケーション（就業大臣）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_AutoConnection_forDaijin.pdf\n\n`;
-        } else if(sysAuth == 'xronos_autoEdu') {
+        } else if(xronosUsesCsv) {
             mail += `・自動連携アプリケーション（Xronos）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_AutoConnection_forDaijin.pdf\n\n`;
         }
 
@@ -1726,70 +1792,90 @@ function generate() {
             mail += `また、お手数ですが、当日までに以下をご用意ください。\n\n`;
                 let preparationIndex = 0;
 
-                const needsWindowsDevice = hasAuth('faceWinEdu') || hasAuth('palmWinEdu') || hasAuth('icWinEdu') || hasAuth('faceunknownEdu') || hasAuth('icunknownEdu');
-                const needsIpadDevice = hasAuth('faceIpadEdu') || hasAuth('icIpadEdu') || hasAuth('faceunknownEdu') || hasAuth('icunknownEdu');
-                if (needsWindowsDevice) {
-                    preparationIndex++;
-                    mail += `${preparationIndex}）打刻端末（WindowsPC）のご準備\n`;
-                    mail += `→当日は打刻端末を１台ご用意ください。\n\n`;
-                }
-                if (needsIpadDevice) {
-                    preparationIndex++;
-                    mail += `${preparationIndex}）打刻端末（iPad）のご準備\n`;
-                    mail += `→当日は打刻端末を１台ご用意ください。\n\n`;
-                    mail += `※iPadをご利用の場合、事前にApple Accountの取得をお願いいたします。\n`;
-                    mail += `取得方法（Apple Supportサイト）\n`;
-                    mail += `https://support.apple.com/ja-jp/108647?device-type=iphone\n\n`;
-                }
-
-                if (alcNotice && (hasAuth('faceWinEdu') || hasAuth('faceIpadEdu') || hasAuth('faceunknownEdu'))) {
+                    const needsWindowsDevice = hasAuth('faceWinEdu') || hasAuth('palmWinEdu') || hasAuth('icWinEdu') || hasAuth('faceunknownEdu') || hasAuth('icunknownEdu');
+                    const needsIpadDevice = hasAuth('faceIpadEdu') || hasAuth('icIpadEdu') || hasAuth('faceunknownEdu') || hasAuth('icunknownEdu');
+                    if (needsWindowsDevice) {
                         preparationIndex++;
-                        mail += `${preparationIndex}）バイタルチェック検知器について\n`;
-                        mail += ` →バイタルチェック検知器のご準備をお願いいたします。\n\n`;
+                        mail += `${preparationIndex}）打刻端末（WindowsPC）のご準備\n`;
+                        mail += `→当日は打刻端末を１台ご用意ください。\n\n`;
+                    }
+                    if (needsIpadDevice) {
                         preparationIndex++;
-                        mail += `${preparationIndex}）ICカードリーダー（免許証有効期限管理用）のご準備\n`;
-                        mail += ` →免許証有効期限管理をご利用になりたい場合、\n`;
-                        mail += `  ICカードリーダーのご準備をお願いいたします。\n`;
-                        mail += `  ※免許証有効期限管理を利用されない場合、ご準備は不要です。\n\n`;
-                        mail += ` ＜推奨機器＞\n ■ソニー社製　PaSoRi （RC-S300）\n`;
-                        mail += `  https://www.iodata.jp/product/interface/iccardreader/ble-nfc/\n\n`;
-                        preparationIndex++;
-                        mail += `${preparationIndex}）WindowsPCのBluetooth通信について\n`;
-                        mail += `   打刻端末がWindowsの場合、Bluetooth通信が行えるかご確認ください。\n`;
-                        mail += `  ※Bluetooth(r) Ver5.0以上 Low Energy（BLE）対応のもの\n`;
-                        mail += `  ※Bluetooth通信ができない場合、無線レシーバーをご準備ください。\n`;
-                        mail += `   動作確認済機器（BUFFALO社製：BSBT5D200BK）\n`;
-                        mail += `   https://www.buffalo.jp/product/detail/bsbt5d200bk.html\n\n`;
-                }
+                        mail += `${preparationIndex}）打刻端末（iPad）のご準備\n`;
+                        mail += `→当日は打刻端末を１台ご用意ください。\n\n`;
+                        mail += `※iPadをご利用の場合、事前にApple Accountの取得をお願いいたします。\n`;
+                        mail += `取得方法（Apple Supportサイト）\n`;
+                        mail += `https://support.apple.com/ja-jp/108647?device-type=iphone\n\n`;
+                    }
 
-                if (hasAuth('palmWinEdu')) {
                     preparationIndex++;
-                    mail += `${preparationIndex}）手のひら静脈センサーのご準備\n\n`;
-                }
+                    mail += `${preparationIndex}）打刻端末がインターネットに接続できる環境をご用意ください。\n\n`;
 
-                preparationIndex++;
-                mail += `${preparationIndex}）打刻端末がインターネットに接続できる環境をご用意ください。\n\n`;
+                    if (hasAuth('palmWinEdu')) {
+                        preparationIndex++;
+                        mail += `${preparationIndex}）手のひら静脈センサーのご準備\n\n`;
+                    }
 
-                preparationIndex++;
-                if (sysAuth === 'bugyo_cloudEdu') {
-                    mail += `${preparationIndex}）奉行クラウドのダウンロードURL、OBCiD/パスワード（管理者権限）のご準備\n`;
-                    mail += ` →奉行クラウドとの連携設定を行うため上記の情報をご準備ください。\n`;
-                    mail += ` ※ダウンロードURLについては奉行クラウド導入時のメールをご参照、\n`;
-                    mail += ` 　もしくは奉行クラウド環境にてご確認ください。\n`;
-                    mail += ` 　ご不明な場合、当日ログインできる端末をご準備ください。\n\n`;
+                    if (alcNotice && (hasAuth('faceWinEdu') || hasAuth('faceIpadEdu') || hasAuth('faceunknownEdu'))) {
+                            preparationIndex++;
+                            mail += `${preparationIndex}）バイタルチェック検知器について\n`;
+                            mail += ` →バイタルチェック検知器のご準備をお願いいたします。\n\n`;
+                            preparationIndex++;
+                            mail += `${preparationIndex}）ICカードリーダー（免許証有効期限管理用）のご準備\n`;
+                            mail += ` →免許証有効期限管理をご利用になりたい場合、\n`;
+                            mail += `  ICカードリーダーのご準備をお願いいたします。\n`;
+                            mail += `  ※免許証有効期限管理を利用されない場合、ご準備は不要です。\n\n`;
+                            mail += ` ＜推奨機器＞\n ■ソニー社製　PaSoRi （RC-S300）\n`;
+                            mail += `  https://www.iodata.jp/product/interface/iccardreader/ble-nfc/\n\n`;
+                            preparationIndex++;
+                            mail += `${preparationIndex}）WindowsPCのBluetooth通信について\n`;
+                            mail += `   打刻端末がWindowsの場合、Bluetooth通信が行えるかご確認ください。\n`;
+                            mail += `  ※Bluetooth(r) Ver5.0以上 Low Energy（BLE）対応のもの\n`;
+                            mail += `  ※Bluetooth通信ができない場合、無線レシーバーをご準備ください。\n`;
+                            mail += `   動作確認済機器（BUFFALO社製：BSBT5D200BK）\n`;
+                            mail += `   https://www.buffalo.jp/product/detail/bsbt5d200bk.html\n\n`;
+                    }
+
+                if (sysAuth === 'xronosEdu' && (xronosEmployeeMethod === 'API' || xronosPunchMethod === 'CSV')) {
+                    preparationIndex++;
+                    mail += `${preparationIndex}）クロノス勤怠に接続できる端末をご用意ください。\n\n`;
+                    if (xronosEmployeeMethod === 'API') {
+                        preparationIndex++;
+                        mail += `${preparationIndex}）従業員情報の同期／打刻データの連携をAPIで行う場合、\n`;
+                        mail += ` XronosLinkにて下記情報のご準備をお願いいたします。\n`;
+                        mail += ` ・トークン発行ID\n`;
+                        mail += ` ・シークレットコード\n`;
+                        mail += ` ・鍵\n`;
+                        mail += ` 上記は、クロノスとの連携設定を行うために必要な情報となります。\n`;
+                        mail += ` ご不明な場合は、当日XronosLinkへログインできる端末をご準備ください。\n\n`;
+                        preparationIndex++;
+                        mail += `${preparationIndex}）XronosLinkにて、打刻を行う従業員情報の同期をお願いいたします。\n\n`;
+                    }
+                    if (xronosEmployeeMethod === 'API' && xronosPunchMethod === 'API') {
+                        preparationIndex++;
+                        mail += `${preparationIndex}）X’sionでの設定を事前にお願いいたします。\n\n`;
+                    }
                 } else {
-                    const systemNames = {
-                        xronos_apiEdu: 'クロノス（API連携）',
-                        xronos_autoEdu: 'クロノス（自動連携）',
-                        obc_autoEdu: '就業奉行',
-                        daijin_autoEdu: '就業大臣',
-                        jinjerEdu: 'ジンジャー',
-                        kinro_shishiEdu: '勤労の獅子'
-                    };
-                    const systemName = systemNames[sysAuth];
-                    if (systemName) {
-                        mail += `${preparationIndex}）${systemName}との連携設定に必要な情報のご準備\n`;
-                        mail += ` →当日、${systemName}との連携設定を行うため、ログインできる端末と必要な情報をご準備ください。\n\n`;
+                    preparationIndex++;
+                    if (sysAuth === 'bugyo_cloudEdu') {
+                        mail += `${preparationIndex}）奉行クラウドのダウンロードURL、OBCiD/パスワード（管理者権限）のご準備\n`;
+                        mail += ` →奉行クラウドとの連携設定を行うため上記の情報をご準備ください。\n`;
+                        mail += ` ※ダウンロードURLについては奉行クラウド導入時のメールをご参照、\n`;
+                        mail += ` 　もしくは奉行クラウド環境にてご確認ください。\n`;
+                        mail += ` 　ご不明な場合、当日ログインできる端末をご準備ください。\n\n`;
+                    } else {
+                        const systemNames = {
+                            xronosEdu: 'クロノス',
+                            obc_autoEdu: '就業奉行',
+                            daijin_autoEdu: '就業大臣',
+                            jinjerEdu: 'ジンジャー',
+                            kinro_shishiEdu: '勤労の獅子'
+                        };
+                        const systemName = systemNames[sysAuth];
+                        if (systemName) {
+                            mail += `${preparationIndex}）${systemName}との連携設定に必要な情報のご準備\n`;
+                            mail += ` →当日、${systemName}との連携設定を行うため、ログインできる端末と必要な情報をご準備ください。\n\n`;
+                        }
                     }
                 }
 
