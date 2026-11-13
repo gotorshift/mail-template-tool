@@ -1464,6 +1464,15 @@ function generate() {
             mail += `※事前にApple Accountの取得をお願いいたします。\n取得方法（Apple Supportサイト）\n`;
             mail += `https://support.apple.com/ja-jp/108647?device-type=iphone\n\n`;
         }
+        if(hasAuth('mobileIphone')) {
+            mail += ` ${stepPreIdx = stepPreIdx + 1}）打刻端末（iPhone）のご準備\n→当日は打刻端末を１台ご用意ください。\n\n`;
+        }
+        if(hasAuth('mobileAndroid')) {
+            mail += ` ${stepPreIdx = stepPreIdx + 1}）打刻端末（Android）のご準備\n→当日は打刻端末を１台ご用意ください。\n\n`;
+        }
+        if(hasAuth('mobileUnknown')) {
+            mail += ` ${stepPreIdx = stepPreIdx + 1}）打刻端末（iPhoneまたはAndroid）のご準備\n→当日は打刻端末を１台ご用意ください。\n\n`;
+        }
 
         mail += ` ${stepPreIdx = stepPreIdx + 1}）打刻端末がインターネットに接続できる環境をご用意ください。\n\n`;
 
@@ -1483,7 +1492,7 @@ function generate() {
                 mail += ` ＜推奨機器＞\n ■ソニー社製　PaSoRi （RC-S300）\n  https://www.iodata.jp/product/interface/iccardreader/ble-nfc/\n\n`;
         }
 
-        if(alc && (hasAuth('faceWin') || hasAuth('faceIpad') || hasAuth('faceunknown'))) {
+        if(alc && needsWindowsDevice) {
                 mail += ` ${stepPreIdx = stepPreIdx + 1}）WindowsPCのBluetooth通信について\n`;
                 mail += `   打刻端末がWindowsの場合、Bluetooth通信が行えるかご確認ください。\n  ※Bluetooth(r) Ver5.0以上 Low Energy（BLE）対応のもの\n  ※Bluetooth通信ができない場合、無線レシーバーをご準備ください。\n`;
                 mail += `   動作確認済機器（BUFFALO社製：BSBT5D200BK）\n   https://www.buffalo.jp/product/detail/bsbt5d200bk.html\n\n`;
@@ -1932,6 +1941,21 @@ function generate() {
                         mail += `取得方法（Apple Supportサイト）\n`;
                         mail += `https://support.apple.com/ja-jp/108647?device-type=iphone\n\n`;
                     }
+                    if (hasAuth('mobileIphoneEdu')) {
+                        preparationIndex++;
+                        mail += `${preparationIndex}）打刻端末（iPhone）のご準備\n`;
+                        mail += `→当日は打刻端末を１台ご用意ください。\n\n`;
+                    }
+                    if (hasAuth('mobileAndroidEdu')) {
+                        preparationIndex++;
+                        mail += `${preparationIndex}）打刻端末（Android）のご準備\n`;
+                        mail += `→当日は打刻端末を１台ご用意ください。\n\n`;
+                    }
+                    if (hasAuth('mobileUnknownEdu')) {
+                        preparationIndex++;
+                        mail += `${preparationIndex}）打刻端末（iPhoneまたはAndroid）のご準備\n`;
+                        mail += `→当日は打刻端末を１台ご用意ください。\n\n`;
+                    }
 
                     preparationIndex++;
                     mail += `${preparationIndex}）打刻端末がインターネットに接続できる環境をご用意ください。\n\n`;
@@ -1955,7 +1979,7 @@ function generate() {
                             mail += ` ＜推奨機器＞\n ■ソニー社製　PaSoRi （RC-S300）\n`;
                             mail += `  https://www.iodata.jp/product/interface/iccardreader/ble-nfc/\n\n`;
                     }
-                    if (alcNotice && (hasAuth('faceWinEdu') || hasAuth('faceIpadEdu') || hasAuth('faceunknownEdu'))) {
+                    if (alcNotice && needsWindowsDevice) {
                             preparationIndex++;
                             mail += `${preparationIndex}）WindowsPCのBluetooth通信について\n`;
                             mail += `   打刻端末がWindowsの場合、Bluetooth通信が行えるかご確認ください。\n`;
