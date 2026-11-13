@@ -44,6 +44,9 @@
         .auth-method-category-title { font-weight: bold; white-space: nowrap; }
         .auth-method-options { display: flex; flex-wrap: wrap; gap: 0 12px; }
         .auth-method-category .check-item { margin-bottom: 0; min-height: 22px; }
+        .vital-check-types { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 24px; }
+        .vital-device-list { margin: 4px 0 8px 20px; }
+        .vital-device-list label { margin-bottom: 4px; }
         @media (max-width: 700px) {
             .auth-method-category { grid-template-columns: 1fr; }
             .auth-method-options { margin-left: 12px; }
@@ -304,13 +307,27 @@
                 <div class="check-item">
                     <input type="checkbox" id="optAlcoholNoticeEdu" onchange="toggleEduVitalCheckOptions(); generate()">バイタルチェック
                 </div>
-                <div id="edu-vital-check-options" class="check-item hidden" style="gap: 15px; margin-left: 24px;">
-                    <label class="radio-item" style="font-weight: normal;">
-                        <input type="checkbox" id="optVitalAlcoholEdu" onchange="generate()">アルコール
-                    </label>
-                    <label class="radio-item" style="font-weight: normal;">
-                        <input type="checkbox" id="optVitalTemperatureEdu" onchange="generate()">体表面温度
-                    </label>
+                <div id="edu-vital-check-options" class="hidden" style="margin-left: 24px;">
+                    <label>1）チェック内容</label>
+                    <div class="vital-check-types">
+                        <div>
+                            <label class="radio-item" style="font-weight: normal;">
+                                <input type="checkbox" id="optVitalAlcoholEdu" onchange="toggleAlcoholDevices('Edu'); generate()">アルコール
+                            </label>
+                            <div id="alcohol-devicesEdu" class="vital-device-list hidden" role="group" aria-label="アルコール機器">
+                                <label class="radio-item" style="font-weight: normal;"><input type="checkbox" value="NEO Blue">NEO Blue</label>
+                                <label class="radio-item" style="font-weight: normal;"><input type="checkbox" value="XENSE-83BTW">XENSE-83BTW</label>
+                                <label class="radio-item" style="font-weight: normal;"><input type="checkbox" value="NEB-601">NEB-601</label>
+                            </div>
+                        </div>
+                        <label class="radio-item" style="font-weight: normal;">
+                            <input type="checkbox" id="optVitalTemperatureEdu" onchange="toggleAlcoholDevices('Edu'); generate()">体表面温度
+                        </label>
+                    </div>
+                    <label>2）免許チェック</label>
+                    <div class="check-item">
+                        <label class="radio-item" style="font-weight: normal;"><input type="checkbox" name="licenseCheckEdu" value="あり／不明" onchange="generate()">あり／不明</label>
+                    </div>
                 </div>
             </div>
 
@@ -327,11 +344,20 @@
                         <input type="date" id="eduPalmShipmentDate" oninput="generate()">
                     </div>
                     <div class="form-group">
-                        <label>お届け</label>
-                        <div class="row">
-                            <div class="form-group"><label>開始日</label><input type="date" id="eduPalmDeliveryStartDate" oninput="generate()"></div>
-                            <div class="form-group"><label>終了日</label><input type="date" id="eduPalmDeliveryEndDate" oninput="generate()"></div>
-                        </div>
+                        <label for="eduPalmDeliveryDate">お届け予定日</label>
+                        <input type="date" id="eduPalmDeliveryDate" oninput="generate()">
+                    </div>
+                </div>
+
+                <div id="edu-vital-shipment-dates" class="hidden">
+                    <h2>バイタルチェック検知器の発送日程</h2>
+                    <div class="form-group">
+                        <label for="eduVitalShipmentDate">発送日</label>
+                        <input type="date" id="eduVitalShipmentDate" oninput="generate()">
+                    </div>
+                    <div class="form-group">
+                        <label for="eduVitalDeliveryDate">お届け予定日</label>
+                        <input type="date" id="eduVitalDeliveryDate" oninput="generate()">
                     </div>
                 </div>
 
@@ -472,13 +498,27 @@
                         </div>
                     </div>
                 </div>
-                <div id="vital-check-options" class="check-item hidden" style="gap: 15px; margin-left: 24px;">
-                    <label class="radio-item" style="font-weight: normal;">
-                        <input type="checkbox" id="optVitalAlcohol" onchange="generate()">アルコール
-                    </label>
-                    <label class="radio-item" style="font-weight: normal;">
-                        <input type="checkbox" id="optVitalTemperature" onchange="generate()">体表面温度
-                    </label>
+                <div id="vital-check-options" class="hidden" style="margin-left: 24px;">
+                    <label>1）チェック内容</label>
+                    <div class="vital-check-types">
+                        <div>
+                            <label class="radio-item" style="font-weight: normal;">
+                                <input type="checkbox" id="optVitalAlcohol" onchange="toggleAlcoholDevices(); generate()">アルコール
+                            </label>
+                            <div id="alcohol-devices" class="vital-device-list hidden" role="group" aria-label="アルコール機器">
+                                <label class="radio-item" style="font-weight: normal;"><input type="checkbox" value="NEO Blue" onchange="generate()">NEO Blue</label>
+                                <label class="radio-item" style="font-weight: normal;"><input type="checkbox" value="XENSE-83BTW" onchange="generate()">XENSE-83BTW</label>
+                                <label class="radio-item" style="font-weight: normal;"><input type="checkbox" value="NEB-601" onchange="generate()">NEB-601</label>
+                            </div>
+                        </div>
+                        <label class="radio-item" style="font-weight: normal;">
+                            <input type="checkbox" id="optVitalTemperature" onchange="toggleAlcoholDevices(); generate()">体表面温度
+                        </label>
+                    </div>
+                    <label>2）免許チェック</label>
+                    <div class="check-item">
+                        <label class="radio-item" style="font-weight: normal;"><input type="checkbox" name="licenseCheck" value="あり／不明" onchange="generate()">あり／不明</label>
+                    </div>
                 </div>
             </div>
 
@@ -489,11 +529,20 @@
                     <input type="date" id="colorecoPalmShipmentDate" oninput="generate()">
                 </div>
                 <div class="form-group">
-                    <label>お届け</label>
-                    <div class="row">
-                        <div class="form-group"><label>開始日</label><input type="date" id="colorecoPalmDeliveryStartDate" oninput="generate()"></div>
-                        <div class="form-group"><label>終了日</label><input type="date" id="colorecoPalmDeliveryEndDate" oninput="generate()"></div>
-                    </div>
+                    <label for="colorecoPalmDeliveryDate">お届け予定日</label>
+                    <input type="date" id="colorecoPalmDeliveryDate" oninput="generate()">
+                </div>
+            </div>
+
+            <div id="coloreco-vital-shipment-dates" class="hidden">
+                <h2>バイタルチェック検知器の発送日程</h2>
+                <div class="form-group">
+                    <label for="colorecoVitalShipmentDate">発送日</label>
+                    <input type="date" id="colorecoVitalShipmentDate" oninput="generate()">
+                </div>
+                <div class="form-group">
+                    <label for="colorecoVitalDeliveryDate">お届け予定日</label>
+                    <input type="date" id="colorecoVitalDeliveryDate" oninput="generate()">
                 </div>
             </div>
 
@@ -700,6 +749,7 @@ function toggleSetupFields() {
     if (replyPanel) replyPanel.classList.toggle('hidden', type !== 'replyEdu');
     toggleXronosMethodFields('Edu');
     togglePalmShipmentFields();
+    toggleVitalShipmentFields('Edu');
 }
 
 function toggleXronosMethodFields(suffix = '') {
@@ -741,6 +791,7 @@ function toggleColorecoFields() {
     }
     toggleXronosMethodFields();
     toggleColorecoPalmShipmentFields();
+    toggleVitalShipmentFields();
 }
 
 function toggleVitalCheckOptions() {
@@ -752,7 +803,10 @@ function toggleVitalCheckOptions() {
     if (!vitalCheck.checked) {
         document.getElementById('optVitalAlcohol').checked = false;
         document.getElementById('optVitalTemperature').checked = false;
+        options.querySelectorAll('input[name="licenseCheck"]').forEach(input => { input.checked = false; });
     }
+    toggleAlcoholDevices();
+    toggleVitalShipmentFields();
 }
 
 function toggleEduVitalCheckOptions() {
@@ -764,6 +818,26 @@ function toggleEduVitalCheckOptions() {
     if (!vitalCheck.checked) {
         document.getElementById('optVitalAlcoholEdu').checked = false;
         document.getElementById('optVitalTemperatureEdu').checked = false;
+        options.querySelectorAll('input[name="licenseCheckEdu"]').forEach(input => { input.checked = false; });
+    }
+    toggleAlcoholDevices('Edu');
+    toggleVitalShipmentFields('Edu');
+}
+
+function toggleVitalShipmentFields(suffix = '') {
+    const isEdu = suffix === 'Edu';
+    const vitalCheck = document.getElementById(isEdu ? 'optAlcoholNoticeEdu' : 'optAlcohol');
+    const shipmentDates = document.getElementById(isEdu ? 'edu-vital-shipment-dates' : 'coloreco-vital-shipment-dates');
+    const mailType = document.querySelector(isEdu ? 'input[name="setupType"]:checked' : 'input[name="colorecoMailType"]:checked');
+    shipmentDates.classList.toggle('hidden', !vitalCheck.checked || !mailType || mailType.value !== (isEdu ? 'noticeEdu' : 'notice'));
+}
+
+function toggleAlcoholDevices(suffix = '') {
+    const alcohol = document.getElementById(`optVitalAlcohol${suffix}`);
+    const devices = document.getElementById(`alcohol-devices${suffix}`);
+    devices.classList.toggle('hidden', !alcohol.checked);
+    if (!alcohol.checked) {
+        devices.querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = false; });
     }
 }
 
@@ -1058,6 +1132,38 @@ function getMonthDiff(d1, d2) {
     return m <= 0 ? 0 : m;
 }
 
+function getVitalTrainingDocuments(devices, alcohol, temperature, license, authMethods) {
+    const documents = new Set();
+    const hasFace = ['faceWin', 'faceIpad', 'faceunknown'].some(method => authMethods.includes(method));
+    const hasPalm = authMethods.includes('palmWin');
+    const addFlowDocuments = (device, checkName) => {
+        if (license) {
+            documents.add(`${checkName}チェックの流れ（免許証チェック有）_${device}.pdf`);
+        } else {
+            if (hasFace) documents.add(`顔認証＋${checkName}チェックの流れ_${device}.pdf`);
+            if (hasPalm) documents.add(`手のひら静脈認証＋${checkName}チェックの流れ_${device}.pdf`);
+        }
+    };
+
+    if (devices.includes('NEO Blue') || devices.includes('NEB-601')) {
+        documents.add('アルコール検知器初期不良について（NEO Blue+NEB-601）.pdf');
+    }
+    if (devices.includes('NEO Blue') && alcohol) {
+        documents.add('アルコール検知器消耗品について_NEO Blue.pdf');
+        addFlowDocuments('NEO Blue', 'アルコール');
+    }
+    const xenseAlcohol = alcohol && devices.includes('XENSE-83BTW');
+    if (xenseAlcohol || temperature) {
+        documents.add('XENSE-83BTW_ご使用時の注意点（まとめ）.pdf');
+        documents.add('アルコール検知器消耗品について_XENSE-83BTW.pdf');
+        const checkName = xenseAlcohol && temperature ? 'アルコール・体表面温度' : xenseAlcohol ? 'アルコール' : '体表面温度';
+        addFlowDocuments('XENSE-83BTW', checkName);
+        if (xenseAlcohol) documents.add('アルコールチェックの注意点_XENSE-83BTW');
+        if (temperature) documents.add('体表面温度チェックの注意点_XENSE-83BTW');
+    }
+    return Array.from(documents);
+}
+
 function generateColorecoFollowUpReply(cComp, cStaff, myName, auth, sysAuth) {
     const authMethods = Array.isArray(auth) ? auth : [auth];
     const hasAuth = (method) => authMethods.includes(method);
@@ -1208,6 +1314,17 @@ function generate() {
         const el = document.getElementById(id);
         return el ? el.value : '';
     };
+    const shipmentNotice = (deviceName, shipmentId, deliveryId) => {
+        const dateText = (id, placeholder) => {
+            const date = val(id);
+            return date ? `${formatMonthDay(date)}（${getDayOfWeek(date, true)}）` : placeholder;
+        };
+        const shipment = dateText(shipmentId, '[発送日]');
+        const delivery = dateText(deliveryId, '[お届け予定日]');
+        return `※${deviceName}の発送は${shipment}となります。\n`
+            + `お届けは${delivery}頃を予定しておりますが、配送状況により前後する可能性がございます。\n`
+            + `万が一、${delivery}を過ぎても機器が届かない場合は、お手数ですがご連絡いただけますと幸いです。\n\n`;
+    };
     const isChked = (id) => {
         const el = document.getElementById(id);
         return el ? el.checked : false;
@@ -1264,13 +1381,10 @@ function generate() {
         mail += `本メールはサービスをご利用する上で重要なお知らせとなりますので\n大切に保管をお願いいたします。\n\n`;
 
         if (hasAuth('palmWin')) {
-            const palmDateText = (id, placeholder) => {
-                const date = val(id);
-                return date ? `${formatMonthDay(date)}（${getDayOfWeek(date, true)}）` : placeholder;
-            };
-            mail += `※手のひら静脈の認証機器の発送は${palmDateText('colorecoPalmShipmentDate', '[発送日]')}となります。\n`;
-            mail += `お届けは${palmDateText('colorecoPalmDeliveryStartDate', '[お届け開始日]')}～${palmDateText('colorecoPalmDeliveryEndDate', '[お届け終了日]')}頃を予定しておりますが、配送状況により前後する可能性がございます。\n`;
-            mail += `万が一、${palmDateText('colorecoPalmDeliveryEndDate', '[お届け終了日]')}を過ぎても機器が届かない場合は、お手数ですがご連絡いただけますと幸いです。\n\n`;
+            mail += shipmentNotice('手のひら静脈の認証機器', 'colorecoPalmShipmentDate', 'colorecoPalmDeliveryDate');
+        }
+        if (alc) {
+            mail += shipmentNotice('バイタルチェック検知器', 'colorecoVitalShipmentDate', 'colorecoVitalDeliveryDate');
         }
         
         mail += ` 【契約情報】\n`;
@@ -1310,6 +1424,9 @@ function generate() {
         mail += ` ${stepIdx = stepIdx + 1}）カラ・レコ操作教育カリキュラムテンプレート\n →当日実施させていただく操作指導内容となります。\n\n`;
         mail += `   前半はインストール作業となるため30分ほどご同席をお願いいたします。\n   後半は操作説明となるためご同席をお願いいたします。\n\n`;
 
+        mail += ` ${stepIdx = stepIdx + 1}）カラ・レコ操作教育実施前確認シート\n`;
+        mail += ` →操作教育実施前にご準備いただく環境/情報のチェックシートとなります。\n  お手数ですが内容のご確認をお願いいたします。\n\n`;
+
         if(hasAuth('faceWin') || hasAuth('faceIpad') || hasAuth('faceunknown')) {
             mail += ` ${stepIdx = stepIdx + 1}）顔登録時の注意点\n\n`
         };
@@ -1322,16 +1439,15 @@ function generate() {
         mail += ` →静脈認証をご利用いただく際のマニュアルやご注意いただく資料となりますのでご活用ください。\n\n`;
         };
 
-        if(alcoholCheck) {
-            if(!hasAuth('palmWin')) {
-                mail += ` ${stepIdx = stepIdx + 1}）「カラ・レコ」顔認証＋アルコールチェックの流れ\n`;
-            }
-            mail += ` ${stepIdx = stepIdx + 1}）アルコール検知器消耗品について\n`;
-            mail += ` →バイタルチェック（アルコール）をご利用いただく際のご案内資料となります。\n\n`;
+        const vitalDevices = selectedValues('alcohol-devices');
+        const licenseCheck = isChked('optAlcohol') && !!document.querySelector('input[name="licenseCheck"]:checked');
+        const vitalDocuments = getVitalTrainingDocuments(vitalDevices, alcoholCheck, temperatureCheck, licenseCheck, authMethods);
+        if (vitalDocuments.length) {
+            vitalDocuments.forEach(documentName => {
+                mail += ` ${stepIdx = stepIdx + 1}）${documentName}\n`;
+            });
+            mail += ` →バイタルチェックをご利用いただく際のご案内資料となります。\n\n`;
         }
-
-        mail += ` ${stepIdx = stepIdx + 1}）カラ・レコ操作教育実施前確認シート\n`;
-        mail += ` →操作教育実施前にご準備いただく環境/情報のチェックシートとなります。\n  お手数ですが内容のご確認をお願いいたします。\n\n`;
 
         mail += `------------------------------------------------------------------------\n■ ご準備物\n------------------------------------------------------------------------\n\n`;
         mail += `当日は以下についてご準備お願いいたします。\n\n`;
@@ -1353,16 +1469,19 @@ function generate() {
             mail += ` ${stepPreIdx = stepPreIdx + 1}）手のひら静脈センサーのご準備\n\n`;
         }
 
-        if(temperatureCheck) {
-            mail += ` ${stepPreIdx = stepPreIdx + 1}）バイタルチェック検知器について\n →バイタルチェック検知器のご準備をお願いいたします。\n\n`;
-        } else if(alcoholCheck) {
-            mail += ` ${stepPreIdx = stepPreIdx + 1}）アルコールチェック検知器について\n →アルコールチェック検知器のご準備をお願いいたします。\n\n`;
+        if(temperatureCheck || alcoholCheck) {
+            const preparationDevices = new Set(vitalDevices);
+            if (temperatureCheck) preparationDevices.add('XENSE-83BTW');
+            const deviceNames = preparationDevices.size ? `（${Array.from(preparationDevices).join('、')}）` : '';
+            mail += ` ${stepPreIdx = stepPreIdx + 1}）バイタルチェック検知器について\n →バイタルチェック検知器${deviceNames}のご準備をお願いいたします。\n\n`;
+        }
+
+        if (licenseCheck) {
+                mail += ` ${stepPreIdx = stepPreIdx + 1}）ICカードリーダー（免許証有効期限管理用）のご準備\n →免許証有効期限管理をご利用になりたい場合、\n  ICカードリーダーのご準備をお願いいたします。\n  ※免許証有効期限管理を利用されない場合、ご準備は不要です。\n\n`;
+                mail += ` ＜推奨機器＞\n ■ソニー社製　PaSoRi （RC-S300）\n  https://www.iodata.jp/product/interface/iccardreader/ble-nfc/\n\n`;
         }
 
         if(alc && (hasAuth('faceWin') || hasAuth('faceIpad') || hasAuth('faceunknown'))) {
-                mail += ` ${stepPreIdx = stepPreIdx + 1}）ICカードリーダー（免許証有効期限管理用）のご準備\n →免許証有効期限管理をご利用になりたい場合、\n  ICカードリーダーのご準備をお願いいたします。\n  ※免許証有効期限管理を利用されない場合、ご準備は不要です。\n\n`;
-                mail += ` ＜推奨機器＞\n ■ソニー社製　PaSoRi （RC-S300）\n  https://www.iodata.jp/product/interface/iccardreader/ble-nfc/\n\n`;
-
                 mail += ` ${stepPreIdx = stepPreIdx + 1}）WindowsPCのBluetooth通信について\n`;
                 mail += `   打刻端末がWindowsの場合、Bluetooth通信が行えるかご確認ください。\n  ※Bluetooth(r) Ver5.0以上 Low Energy（BLE）対応のもの\n  ※Bluetooth通信ができない場合、無線レシーバーをご準備ください。\n`;
                 mail += `   動作確認済機器（BUFFALO社製：BSBT5D200BK）\n   https://www.buffalo.jp/product/detail/bsbt5d200bk.html\n\n`;
@@ -1610,11 +1729,6 @@ function generate() {
             const sDay = sDateRaw ? `（${getDayOfWeek(sDateRaw, true)}）` : "";
             const evStart = formatJapanDate(val('eduEvalStart')) || "[20●●年●月●日]";
             const evEnd = formatJapanDate(val('eduEvalEnd')) || "[20●●年●月●日]";
-            const palmDateText = (id, placeholder) => {
-                const date = val(id);
-                return date ? `${formatMonthDay(date)}（${getDayOfWeek(date, true)}）` : placeholder;
-            };
-            
             mail = `${cComp}\n${cStaff}様\n\n`;
             mail += `打刻管理システム「カラ・レコ」サポートセンターでございます。\n`;
             mail += `この度は、「カラ・レコ」にお申し込みいただき、誠にありがとうございます。\n\n`;
@@ -1629,9 +1743,10 @@ function generate() {
             mail += `第二希望 ：   月   日   ：   ～\n`;
             mail += `第三希望 ：   月   日   ：   ～\n\n`;
             if (hasAuth('palmWinEdu')) {
-                mail += `※手のひら静脈の認証機器の発送は${palmDateText('eduPalmShipmentDate', '[発送日]')}となります。\n`;
-                mail += `お届けは${palmDateText('eduPalmDeliveryStartDate', '[お届け開始日]')}～${palmDateText('eduPalmDeliveryEndDate', '[お届け終了日]')}頃を予定しておりますが、配送状況により前後する可能性がございます。\n`;
-                mail += `万が一、${palmDateText('eduPalmDeliveryEndDate', '[お届け終了日]')}を過ぎても機器が届かない場合は、お手数ですがご連絡いただけますと幸いです。\n\n`;
+                mail += shipmentNotice('手のひら静脈の認証機器', 'eduPalmShipmentDate', 'eduPalmDeliveryDate');
+            }
+            if (alcNotice) {
+                mail += shipmentNotice('バイタルチェック検知器', 'eduVitalShipmentDate', 'eduVitalDeliveryDate');
             }
             
             mail += `------------------------------------------------------------\n`;
@@ -1820,6 +1935,8 @@ function generate() {
                             preparationIndex++;
                             mail += `${preparationIndex}）バイタルチェック検知器について\n`;
                             mail += ` →バイタルチェック検知器のご準備をお願いいたします。\n\n`;
+                    }
+                    if (alcNotice && document.querySelector('input[name="licenseCheckEdu"]:checked')) {
                             preparationIndex++;
                             mail += `${preparationIndex}）ICカードリーダー（免許証有効期限管理用）のご準備\n`;
                             mail += ` →免許証有効期限管理をご利用になりたい場合、\n`;
@@ -1827,6 +1944,8 @@ function generate() {
                             mail += `  ※免許証有効期限管理を利用されない場合、ご準備は不要です。\n\n`;
                             mail += ` ＜推奨機器＞\n ■ソニー社製　PaSoRi （RC-S300）\n`;
                             mail += `  https://www.iodata.jp/product/interface/iccardreader/ble-nfc/\n\n`;
+                    }
+                    if (alcNotice && (hasAuth('faceWinEdu') || hasAuth('faceIpadEdu') || hasAuth('faceunknownEdu'))) {
                             preparationIndex++;
                             mail += `${preparationIndex}）WindowsPCのBluetooth通信について\n`;
                             mail += `   打刻端末がWindowsの場合、Bluetooth通信が行えるかご確認ください。\n`;
