@@ -113,6 +113,7 @@
     <div class="tab" data-tab="renew" onclick="switchTab('renew')">契約更新</div>
     <div class="tab" data-tab="edu" onclick="switchTab('edu')">初回設定</div>
     <div class="tab" data-tab="coloreco" onclick="switchTab('coloreco')">導入支援</div>
+    <div class="tab" data-tab="useware" onclick="switchTab('useware')">ユースウェア</div>
     <div class="tab" data-tab="vacation" onclick="switchTab('vacation')">長期休暇通知</div>
     <div class="tab" data-tab="maintenance" onclick="switchTab('maintenance')">メンテナンス</div>
     <div class="tab" data-tab="vup" onclick="switchTab('vup')">バージョンアップ</div>
@@ -582,6 +583,47 @@
             </div>
         </div>
 
+        <div id="panel-useware" class="hidden">
+            <h2>研修参加情報</h2>
+            <div class="form-group">
+                <label for="usewareDate">研修日</label>
+                <input type="date" id="usewareDate" oninput="generate()">
+            </div>
+            <div class="row">
+                <div class="form-group"><label for="usewareStartTime">開始時間</label><input type="time" id="usewareStartTime" oninput="generate()"></div>
+                <div class="form-group"><label for="usewareEndTime">終了時間</label><input type="time" id="usewareEndTime" oninput="generate()"></div>
+            </div>
+            <div class="form-group">
+                <label for="usewareZoom">実施URL</label>
+                <textarea id="usewareZoom" style="height: 80px;" placeholder="https://" oninput="generate()"></textarea>
+            </div>
+            <h2>アカウント情報</h2>
+            <div class="check-box-group">
+                <label class="check-item"><input type="checkbox" id="usewareBugyoEnabled" checked onchange="toggleUsewareAccounts(); generate()">奉行クラウド環境</label>
+                <label class="check-item"><input type="checkbox" id="usewareXronosEnabled" checked onchange="toggleUsewareAccounts(); generate()">クロノス環境</label>
+            </div>
+            <div id="usewareBugyoFields">
+                <h2>奉行クラウド環境</h2>
+                <div class="form-group"><label for="usewareBugyoName">環境名</label><input type="text" id="usewareBugyoName" oninput="generate()"></div>
+                <div class="form-group"><label for="usewareBugyoUrl">ログインURL</label><input type="text" id="usewareBugyoUrl" oninput="generate()"></div>
+                <div class="row">
+                    <div class="form-group"><label for="usewareBugyoId">管理者ユーザID</label><input type="text" id="usewareBugyoId" oninput="generate()"></div>
+                    <div class="form-group"><label for="usewareBugyoPassword">管理者パスワード</label><input type="text" id="usewareBugyoPassword" oninput="generate()"></div>
+                </div>
+                <div class="form-group"><label for="usewareBugyoMobileId">企業ID（モバイル版）</label><input type="text" id="usewareBugyoMobileId" oninput="generate()"></div>
+            </div>
+            <div id="usewareXronosFields">
+                <h2>クロノス環境</h2>
+                <div class="form-group"><label for="usewareXronosName">環境名</label><input type="text" id="usewareXronosName" oninput="generate()"></div>
+                <div class="form-group"><label for="usewareXronosUrl">ログインURL</label><input type="text" id="usewareXronosUrl" oninput="generate()"></div>
+                <div class="row">
+                    <div class="form-group"><label for="usewareXronosId">管理者ユーザID</label><input type="text" id="usewareXronosId" oninput="generate()"></div>
+                    <div class="form-group"><label for="usewareXronosPassword">管理者パスワード</label><input type="text" id="usewareXronosPassword" oninput="generate()"></div>
+                </div>
+                <div class="form-group"><label for="usewareXronosMobileId">企業ID（モバイル版）</label><input type="text" id="usewareXronosMobileId" oninput="generate()"></div>
+            </div>
+        </div>
+
         <!-- レイアウト：長期休暇通知 -->
         <div id="panel-vacation" class="hidden">
             <h2>休暇種別</h2>
@@ -974,6 +1016,13 @@ function updateStaffVisibility() {
     }
 }
 
+function toggleUsewareAccounts() {
+    ['Bugyo', 'Xronos'].forEach(name => {
+        const enabled = document.getElementById(`useware${name}Enabled`).checked;
+        document.getElementById(`useware${name}Fields`).classList.toggle('hidden', !enabled);
+    });
+}
+
 function switchTab(tabName) {
     currentTab = tabName;
     // localStorageにアクティブなタブを保存
@@ -994,6 +1043,7 @@ function switchTab(tabName) {
         'renew': '契約更新',
         'edu': '初回設定',
         'coloreco': '導入支援',
+        'useware': 'ユースウェア',
         'vacation': '長期休暇通知',
         'maintenance': 'サーバーメンテナンス',
         'vup': 'バージョンアップ',
@@ -1004,6 +1054,7 @@ function switchTab(tabName) {
     document.getElementById('panel-renew').classList.toggle('hidden', tabName !== 'renew');
     document.getElementById('panel-edu').classList.toggle('hidden', tabName !== 'edu');
     document.getElementById('panel-coloreco').classList.toggle('hidden', tabName !== 'coloreco');
+    document.getElementById('panel-useware').classList.toggle('hidden', tabName !== 'useware');
     document.getElementById('panel-vup').classList.toggle('hidden', tabName !== 'vup');
     document.getElementById('panel-vacation').classList.toggle('hidden', tabName !== 'vacation');
     document.getElementById('panel-maintenance').classList.toggle('hidden', tabName !== 'maintenance');
@@ -1345,8 +1396,60 @@ function generate() {
     let subject = "";
     let mail = "";
 
+    if(currentTab === 'useware') {
+        subject = `【カラ・レコ】操作支援研修のご案内`;
+        mail = `${cComp}\n${cStaff}様\n\n`;
+        mail += `お世話になっております。\n「カラ・レコ」開発元シフトの${myName}と申します。\n\n`;
+        mail += `このたび実施いたします「カラ・レコ」操作支援研修につきまして、\nZoomの参加URL、研修用環境のアカウント情報、事前準備事項をご案内いたします。\n\n`;
+        mail += `研修当日に使用する情報を記載しておりますので、\n本メールは大切に保管いただきますようお願いいたします。\n\n`;
+        mail += `また、事前にご確認いただきたい資料や課題もございますので、\nあわせてご確認いただけますと幸いです。\n\n`;
+        mail += `------------------------------------------------------------------------\n■ 研修参加情報\n------------------------------------------------------------------------\n\n`;
+        const trainingDate = val('usewareDate');
+        const trainingDateText = trainingDate ? `${formatMonthDay(trainingDate)}（${getDayOfWeek(trainingDate, true)}）` : '[研修日]';
+        const trainingStartTime = val('usewareStartTime') || '[開始時間]';
+        const trainingEndTime = val('usewareEndTime') || '[終了時間]';
+        mail += `日時：${trainingDateText} ${trainingStartTime}～${trainingEndTime}\n`;
+        mail += `Zoom URL：\n${val('usewareZoom').trim() || '[Zoom参加情報]'}\n\n`;
+        mail += `------------------------------------------------------------------------\n■ アカウント情報\n------------------------------------------------------------------------\n\n`;
+        mail += `以下は、研修および今後のテスト環境としてご利用いただくアカウント情報です。\n\n`;
+        const accountTypes = [
+            { key: 'Bugyo', label: '奉行クラウド' },
+            { key: 'Xronos', label: 'クロノス' }
+        ];
+        let accountCount = 0;
+        accountTypes.forEach(({ key, label }) => {
+            if (!isChked(`useware${key}Enabled`)) return;
+            accountCount++;
+            const prefix = `useware${key}`;
+            mail += `【${label}環境】\n`;
+            mail += `環境名：${val(`${prefix}Name`).trim() || `${cComp}（${label}）`}\n\n`;
+            mail += `・ログインURL\n${val(`${prefix}Url`).trim() || '[ログインURL]'}\n\n`;
+            mail += `・admin管理者ユーザID：${val(`${prefix}Id`).trim() || '[管理者ユーザID]'}\n`;
+            mail += `・admin管理者パスワード：${val(`${prefix}Password`).trim() || '[管理者パスワード]'}\n`;
+            mail += `・企業ID（モバイル版）：${val(`${prefix}MobileId`).trim() || '[企業ID（モバイル版）]'}\n\n`;
+        });
+        if (!accountCount) mail += `[アカウント情報]\n\n`;
+        mail += `------------------------------------------------------------------------\n■ 研修当日にご準備いただくもの\n------------------------------------------------------------------------\n\n`;
+        mail += `・インターネットに接続の可能なPC\n・カメラ、マイク、画面共有が可能な環境\n・送付資料\n\n`;
+        mail += `なお、研修では実際の管理画面や操作手順をご案内する予定です。\nお手元で資料をご確認いただける状態にしていただけますと幸いです。\n\n`;
+        mail += `------------------------------------------------------------------------\n■ 送付資料について\n------------------------------------------------------------------------\n\n`;
+        mail += `研修にあたり、以下の資料をお送りいたします。\n\n`;
+        mail += `1．ユースウェア会社様向け_資料一覧\n2．トラブル対応・役割分担一覧\n3．操作支援時に使用する資料\n\n`;
+        mail += `上記資料につきましては、現在、コンテンツ管理システムからダウンロードいただけるよう準備を進めております。\n\n`;
+        mail += `そのため、今回はファイルでの送付とさせていただきますが、\n今後はコンテンツ管理システムからダウンロードいただく運用を予定しております。\n`;
+        mail += `※準備が整い次第、ダウンロード先を含めた正式な資料一覧を改めてお送りいたします。\n\n`;
+        mail += `------------------------------------------------------------------------\n■ 事前課題について\n------------------------------------------------------------------------\n\n`;
+        mail += `研修を円滑に進めるため、研修初日の3～5営業日前までを目安に、\n以下の事前課題へのご対応をお願いいたします。\n\n`;
+        mail += `1．クイックスタートガイドの確認\n2．指定動画の視聴\n3．事前確認問題への回答\n\n`;
+        mail += `各資料のURLや確認内容につきましては、\n添付の「ユースウェア会社様向け_資料一覧」に記載しておりますので、ご確認ください。\n\n`;
+        mail += `事前課題では、カラ・レコの基本的な仕組みや操作の流れについてご理解いただくことを目的としております。\n`;
+        mail += `研修当日は、事前課題の内容を踏まえながら、製品仕様や導入支援の流れについてご説明いたします。\n\n`;
+        mail += `――――――――――――――――――――\n\n`;
+        mail += `以上が研修に関するご案内となります。\n研修内容や事前準備についてご不明な点がございましたら、お気軽にお問い合わせください。\n`;
+        mail += `お忙しいところ恐れ入りますが、ご確認および事前準備にご協力いただけますと幸いです。\n\n`;
+        mail += `何卒よろしくお願いいたします。\n\n${signature}`;
     // 操作指導
-    if(currentTab === 'coloreco') {
+    } else if(currentTab === 'coloreco') {
         let sysAuth = val('sysAuthMethod');
         if (sysAuth === 'xronos') {
             const employeeMethod = val('xronosEmployeeMethod');
