@@ -728,6 +728,8 @@ MAIL： ccdakoku_support@shift-2005.co.jp
 FAQ ： http://help.cckintai.com/shift/colorecocloud/
 ━━━━━━━━━━━━━━━━━━━━━━━`;
 
+const MOBILE_PUNCH_MANUAL = `・モバイル打刻アプリケーションマニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_Mobile.pdf\n\n`;
+
 function getFormattedSignature(name, isVup = false) {
     return BASE_COMMON_SIGNATURE;
 }
@@ -1605,6 +1607,10 @@ function generate() {
                 mail += `・iPad版打刻アプリ（カメレオンコード）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_iPad.pdf\n\n`;
             }
 
+            if (mobilePunchLabel) {
+                mail += MOBILE_PUNCH_MANUAL;
+            }
+
             // 自動連携
             if(sysAuth == 'obc_auto') {
                 mail += `・自動連携アプリケーション（就業奉行）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_AutoConnection.pdf\n\n`;
@@ -1615,7 +1621,7 @@ function generate() {
             }
 
         if(alc) {
-            mail += `・アルコール検査機能マニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_AlcoholInspection.pdf\n\n`;
+            mail += `・バイタルチェックマニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_VitalCheck.pdf\n\n`;
         }
 
         mail += `内容についてご不明な点がございましたら、\n`;
@@ -1857,6 +1863,10 @@ function generate() {
             mail += `・iPad版打刻アプリ（カメレオンコード）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_iPad.pdf\n\n`;
         }
 
+        if (mobilePunchLabel) {
+            mail += MOBILE_PUNCH_MANUAL;
+        }
+
         // 自動連携
         if(sysAuth == 'obc_autoEdu') {
             mail += `・自動連携アプリケーション（就業奉行）\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_Client_AutoConnection.pdf\n\n`;
@@ -1867,7 +1877,7 @@ function generate() {
         }
 
         if(alcNotice) {
-            mail += `・アルコール検査機能マニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_AlcoholInspection.pdf\n\n`;
+            mail += `・バイタルチェックマニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_VitalCheck.pdf\n\n`;
         }
 
             mail += `操作・設定等でご不明な点がございましたら、\n`;
@@ -2003,8 +2013,12 @@ function generate() {
             mail += `------------------------------------------------------------\n\n`;
             mail += `・管理者マニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_WebManagement.pdf\n\n`;
 
+            if (getMobilePunchLabel(authMethods, 'Edu')) {
+                mail += MOBILE_PUNCH_MANUAL;
+            }
+
             if(alcNotice) {
-                mail += `・アルコール検査機能マニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_AlcoholInspection.pdf\n\n`;
+                mail += `・バイタルチェックマニュアル\n https://sdk.shift-cc.com/portal/DL/Coloreco/Coloreco_Manual_VitalCheck.pdf\n\n`;
             }
 
             mail += `以上、不明点ありましたら、\n`;
