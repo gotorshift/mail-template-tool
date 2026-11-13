@@ -162,11 +162,11 @@
                     <div class="row" style="margin-top: 5px;">
                         <div class="form-group">
                             <label>変更前ID数</label>
-                            <input type="text" id="licIdBefore" placeholder="880" oninput="generate()">
+                            <input type="text" id="licIdBefore" oninput="generate()">
                         </div>
                         <div class="form-group">
                             <label>変更後ID数</label>
-                            <input type="text" id="licIdAfter" placeholder="930" oninput="generate()">
+                            <input type="text" id="licIdAfter" oninput="generate()">
                         </div>
                     </div>
                 </div>
@@ -175,12 +175,12 @@
                     <span style="font-size: 0.85em; font-weight: bold; color: #0056b3;">【打刻クライアント台数】</span>
                     <div class="row" style="margin-top: 5px;">
                         <div class="form-group">
-                            <label>変更前台数（例：5）</label>
-                            <input type="text" id="licDeviceBefore" placeholder="5" oninput="generate()">
+                            <label>変更前台数</label>
+                            <input type="text" id="licDeviceBefore" oninput="generate()">
                         </div>
                         <div class="form-group">
-                            <label>変更後台数（例：7）</label>
-                            <input type="text" id="licDeviceAfter" placeholder="7" oninput="generate()">
+                            <label>変更後台数</label>
+                            <input type="text" id="licDeviceAfter" oninput="generate()">
                         </div>
                     </div>
                 </div>
@@ -1679,35 +1679,41 @@ function generate() {
             
             let changeLines = [];
             let checkLabels = [];
+            let licenseTypes = [];
             
             if (chkID) {
-                const bNum = val('licIdBefore') || "[変更前ID数]";
-                const aNum = val('licIdAfter') || "[変更後ID数]";
-                changeLines.push(`利用可能従業員数：${bNum}IDから${aNum}IDに変更しております。`);
-                checkLabels.push("「利用可能従業員数」");
+                licenseTypes.push("従業員ライセンス");
+                checkLabels.push("利用可能従業員数");
             }
             if (chkDevice) {
                 const bNum = val('licDeviceBefore') || "[変更前デバイス数]";
                 const aNum = val('licDeviceAfter') || "[変更後デバイス数]";
-                changeLines.push(`打刻クライアント台数：${bNum}台から${aNum}台に変更しております。`);
-                checkLabels.push("「打刻クライアント台数」");
+                licenseTypes.push("打刻ライセンス");
+                changeLines.push(`・${bNum}台から${aNum}台に変更しております。`);
+                checkLabels.push("打刻クライアント台数");
+            }
+            if (chkID) {
+                const bNum = val('licIdBefore') || "[変更前ID数]";
+                const aNum = val('licIdAfter') || "[変更後ID数]";
+                changeLines.push(`・${bNum}IDから${aNum}IDに変更しております。`);
             }
             
             if (changeLines.length === 0) {
                 changeLines.push(`[ライセンス種別]`);
+                checkLabels.push("[確認項目]");
             }
 
             mail = `${cComp}\n${cStaff}様\n\n`;
             mail += `いつもお世話になっております。\n`;
             mail += `打刻管理システム「カラ・レコ」サポートセンター ${myName}でございます。\n\n`;
-            mail += `ご契約情報の更新処理が完了いたしましたので、ご連絡いたします。\n\n`;
+            mail += `ご依頼いただいておりました${licenseTypes.join('、') || '[ライセンス種別]'}の追加処理が完了いたしました。\n\n`;
             
             changeLines.forEach(line => {
                 mail += `${line}\n`;
             });
             
-            mail += `管理画面＞その他設定＞企業情報＞ライセンス情報より\n`;
-            mail += `${checkLabels.join('および')}をご確認くださいませ。\n\n`;
+            mail += `\n管理画面＞その他設定＞企業情報＞ライセンス情報より\n`;
+            mail += `${checkLabels.join('、')}をご確認くださいませ。\n\n`;
             mail += `今後ともどうぞよろしくお願いいたします。\n\n`;
             mail += signature;
         } else {
