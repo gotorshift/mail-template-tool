@@ -1,14 +1,20 @@
 (function () {
     const passwordDigest = '6b4a17f066948549d8cb7003790dbd677598b3ffb75e9fa0747187e68e9a9331';
-    const authKey = 'mail-tool-authenticated-until';
-    const authDurationMs = 30 * 24 * 60 * 60 * 1000;
+    const authKey = 'mail-tool-authenticated';
+    const legacyAuthKey = 'mail-tool-authenticated-until';
     let isAuthenticated = false;
 
     try {
-        const storedExpiry = localStorage.getItem(authKey);
+        isAuthenticated = localStorage.getItem(authKey) === 'true';
+        const storedExpiry = localStorage.getItem(legacyAuthKey);
         const expiresAt = Number(storedExpiry);
-        isAuthenticated = Number.isFinite(expiresAt) && expiresAt > Date.now();
-        if (storedExpiry && !isAuthenticated) localStorage.removeItem(authKey);
+        const hasValidLegacyAuth = Number.isFinite(expiresAt) && expiresAt > Date.now();
+
+        if (!isAuthenticated && hasValidLegacyAuth) {
+            localStorage.setItem(authKey, 'true');
+            isAuthenticated = true;
+        }
+        localStorage.removeItem(legacyAuthKey);
     } catch (error) {
         console.error('ログイン状態を確認できませんでした。', error);
     }
@@ -103,7 +109,7 @@
                     return;
                 }
 
-                localStorage.setItem(authKey, String(Date.now() + authDurationMs));
+                localStorage.setItem(authKey, 'true');
                 window.location.reload();
             } catch (error) {
                 console.error('ログイン処理に失敗しました。', error);
