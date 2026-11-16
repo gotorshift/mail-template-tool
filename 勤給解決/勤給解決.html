@@ -33,11 +33,14 @@
         .row > div { flex: 1; }
         
         .subject-wrap { display: flex; gap: 5px; margin-bottom: 15px; }
+        .copy-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+        .copy-title-row label { margin-bottom: 0; }
         input#output-subject { font-weight: bold; color: #333; background: #fdfdfd; flex: 1; }
-        .copy-sub-btn { padding: 0 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85em; }
+        .copy-sub-btn { padding: 4px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85em; }
         textarea#output { width: 100%; height: 680px; font-family: monospace; font-size: 13px; padding: 10px; border: 1px solid #ccc; background: #fafafa; }
         
         .copy-btn { width: 100%; padding: 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .copy-btn.inline-copy-btn { width: auto; padding: 4px 12px; margin-top: 0; }
         .check-box-group { background: #eef6ff; padding: 15px; border-radius: 4px; margin-top: 5px; font-size: 0.9em; }
         .check-item { margin-bottom: 5px; display: flex; align-items: center; }
         .check-item input { width: auto; margin-right: 8px; }
@@ -317,16 +320,19 @@
     </div>
 
     <div class="output-panel">
-        
-        <label>件名</label>
-        <div class="subject-wrap">
-            <input type="text" id="output-subject" readonly>
+        <div class="copy-title-row">
+            <label for="output-subject">件名</label>
             <button class="copy-sub-btn" onclick="copySubject()">件名をコピー</button>
         </div>
+        <div class="subject-wrap">
+            <input type="text" id="output-subject" readonly>
+        </div>
 
-        <label>本文</label>
+        <div class="copy-title-row">
+            <label for="output">本文</label>
+            <button class="copy-btn inline-copy-btn" onclick="copyText()">本文をコピー</button>
+        </div>
         <textarea id="output" readonly></textarea>
-        <button class="copy-btn" onclick="copyText()">本文をコピー</button>
     </div>
 </div>
 

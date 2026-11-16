@@ -32,11 +32,14 @@
         .row > div { flex: 1; }
         
         .subject-wrap { display: flex; gap: 5px; margin-bottom: 15px; }
+        .copy-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+        .copy-title-row label { margin-bottom: 0; }
         input#output-subject { font-weight: bold; color: #333; background: #fdfdfd; flex: 1; }
-        .copy-sub-btn { padding: 0 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85em; }
+        .copy-sub-btn { padding: 4px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85em; }
         textarea#output { width: 100%; height: 680px; font-family: monospace; font-size: 13px; padding: 10px; border: 1px solid #ccc; background: #fafafa; }
         
         .copy-btn { width: 100%; padding: 12px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .copy-btn.inline-copy-btn { width: auto; padding: 4px 12px; margin-top: 0; }
         .check-box-group { background: #eef6ff; padding: 15px; border-radius: 4px; margin-top: 5px; font-size: 0.9em; }
         .check-item { margin-bottom: 5px; display: flex; align-items: center; }
         .check-item input { width: auto; margin-right: 8px; }
@@ -401,6 +404,15 @@
 
         <!-- レイアウト：導入支援タブ -->
         <div id="panel-coloreco" class="hidden">
+            <h2>依頼書PDFの取り込み</h2>
+            <div class="form-group">
+                <label for="colorecoPdfFile">PDFファイル</label>
+                <input type="file" id="colorecoPdfFile" accept="application/pdf,.pdf">
+                <button type="button" id="colorecoPdfImport" class="copy-btn" style="margin-top: 6px;" onclick="importColorecoPdf()">PDFを読み取って入力</button>
+                <p style="font-size: 0.85em; color: #555;" id="colorecoPdfStatus" role="status" aria-live="polite">
+                    PDFの内容はブラウザー内で処理され、外部へ送信されません。※試験導入中です。
+                </p>
+            </div>
             <h2>用途切替</h2>
             <div class="radio-group">
                 <label class="radio-item">
@@ -747,15 +759,19 @@
     </div>
 
     <div class="output-panel">
-        <label>件名</label>
-        <div class="subject-wrap">
-            <input type="text" id="output-subject" readonly>
+        <div class="copy-title-row">
+            <label for="output-subject">件名</label>
             <button class="copy-sub-btn" onclick="copySubject()">件名をコピー</button>
         </div>
+        <div class="subject-wrap">
+            <input type="text" id="output-subject" readonly>
+        </div>
 
-        <label>本文</label>
+        <div class="copy-title-row">
+            <label for="output">本文</label>
+            <button class="copy-btn inline-copy-btn" onclick="copyText()">本文をコピー</button>
+        </div>
         <textarea id="output" readonly></textarea>
-        <button class="copy-btn" onclick="copyText()">本文をコピー</button>
     </div>
 </div>
 
@@ -2414,6 +2430,374 @@ function copyText() {
     textarea.select();
     document.execCommand('copy');
     alert('本文をコピーしました。');
+}
+
+const pdfOcrScriptUrls = {
+    pdfjs: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/legacy/build/pdf.mjs',
+    pdfjsWorker: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67/legacy/build/pdf.worker.mjs',
+    tesseract: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'
+};
+const pdfOcrLibraryPromises = {};
+
+function loadPdfOcrLibrary(name) {
+    if (!pdfOcrLibraryPromises[name]) {
+        const loadPromise = name === 'pdfjs'
+            ? import(pdfOcrScriptUrls.pdfjs).then(pdfjs => {
+                window.pdfjsLib = pdfjs;
+                pdfjs.GlobalWorkerOptions.workerSrc = pdfOcrScriptUrls.pdfjsWorker;
+            })
+            : loadPdfOcrScript(pdfOcrScriptUrls[name], () => typeof Tesseract !== 'undefined');
+        pdfOcrLibraryPromises[name] = loadPromise.catch(error => {
+            delete pdfOcrLibraryPromises[name];
+            throw error;
+        });
+    }
+    return pdfOcrLibraryPromises[name];
+}
+
+function loadPdfOcrScript(url, isLoaded) {
+    if (isLoaded()) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => isLoaded()
+            ? resolve()
+            : reject(new Error('PDF読み取りライブラリを初期化できませんでした。'));
+        script.onerror = () => reject(new Error('PDF読み取りライブラリを読み込めませんでした。インターネット接続を確認してください。'));
+        document.head.appendChild(script);
+    });
+}
+
+function normalizePdfOcrText(text) {
+    return text.normalize('NFKC')
+        .replace(/\r/g, '')
+        .replace(/[ \t　]+/g, ' ')
+        .replace(/(\d)[ \t]+(?=\d)/g, '$1')
+        .replace(/[\u200B-\u200D\uFEFF]/g, '');
+}
+
+function normalizeOcrPageText(text) {
+    return normalizePdfOcrText(text)
+        .replace(/([\u3040-\u30ff\u3400-\u9fff々ー])[ \t　]+(?=[\u3040-\u30ff\u3400-\u9fff々ー])/g, '$1')
+        .replace(/(\d)[ \t　]+(?=\d)/g, '$1');
+}
+
+function cleanPdfOcrValue(value) {
+    return value.replace(/^[\s:：\-‐―]+|[\s:：]+$/g, '').trim();
+}
+
+function getPdfPageText(items) {
+    const rows = [];
+    items.forEach(item => {
+        const value = item.str && item.str.trim();
+        if (!value) return;
+        const y = item.transform ? item.transform[5] : 0;
+        let row = rows.find(candidate => Math.abs(candidate.y - y) < 2);
+        if (!row) {
+            row = { y, items: [] };
+            rows.push(row);
+        }
+        row.items.push({ x: item.transform ? item.transform[4] : 0, value });
+    });
+    return rows.sort((a, b) => b.y - a.y)
+        .map(row => row.items.sort((a, b) => a.x - b.x).map(item => item.value).join(' '))
+        .join('\n');
+}
+
+function dateForPdfInput(value) {
+    const normalized = normalizePdfOcrText(value);
+    const match = normalized.match(/(20\d{2})\s*[年./\-]\s*(\d{1,2})\s*[月./\-]\s*(\d{1,2})/);
+    if (!match) return '';
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return '';
+    return `${match[1]}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function timeForPdfInput(value) {
+    const match = normalizePdfOcrText(value).match(/(?:^|\D)([01]?\d|2[0-3])[:：時]([0-5]\d)?/);
+    return match ? `${String(Number(match[1])).padStart(2, '0')}:${match[2] || '00'}` : '';
+}
+
+const pdfValueBoundaryLabels = [
+    '担当者名（かな）', '担当者（かな）', '担当者名', 'ご担当者', '担当者',
+    '部署名', '電話番号', '郵便番号', '住所', '会社名', '企業名', '法人名', '貴社名',
+    '連携先システム', '連携システム', '契約ID数', '利用者数', '従業員数',
+    'サービス利用開始日', '契約開始日', '契約終了日', '契約期間', '利用期間',
+    '操作指導実施日', '操作指導日', '訪問日', '訪問希望日',
+    '開始時間', '開始時刻', '終了時間', '終了時刻', '実施方法'
+];
+
+function findPdfValueBoundary(value) {
+    const labels = pdfValueBoundaryLabels.map(label => Array.from(normalizePdfOcrText(label), character =>
+        character.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*')).join('|');
+    const match = value.match(new RegExp(`(?:^|\\s)(?:${labels})(?=$|\\s|[:：(（])`));
+    return match ? match.index : value.length;
+}
+
+function findPdfLabelValue(text, labels) {
+    const lines = normalizePdfOcrText(text).split('\n').map(line => line.trim()).filter(Boolean);
+    const labelPattern = labels.map(label => Array.from(normalizePdfOcrText(label), character =>
+        character.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*')).join('|');
+    const pattern = new RegExp(`(?:^|\\s)(?:${labelPattern})(?=$|\\s|[:：])`);
+    for (let index = 0; index < lines.length; index++) {
+        const match = lines[index].match(pattern);
+        if (!match) continue;
+        const tail = lines[index].slice(match.index + match[0].length).replace(/^[\s:：]+/, '');
+        const value = cleanPdfOcrValue(tail.slice(0, findPdfValueBoundary(tail)));
+        if (value) return value;
+        if (tail.trim()) continue;
+        if (index + 1 < lines.length && !pattern.test(lines[index + 1])) {
+            const nextLine = cleanPdfOcrValue(lines[index + 1].slice(0, findPdfValueBoundary(lines[index + 1])));
+            if (nextLine && !/^[■□☒✓✔]/.test(nextLine)) return nextLine;
+        }
+    }
+    return '';
+}
+
+function getColorecoPdfValues(text) {
+    const values = {};
+    const add = (id, value) => {
+        if (value) values[id] = value;
+    };
+    const normalizedText = normalizePdfOcrText(text);
+    const lines = normalizedText.split('\n').map(line => line.trim()).filter(Boolean);
+    const company = findPdfLabelValue(text, ['貴社名', '会社名', '企業名', '法人名']);
+    const staff = findPdfLabelValue(text, ['担当者名', 'ご担当者', '担当者']);
+    const integration = findPdfLabelValue(text, ['連携システム', '連携先システム']);
+    const selectedXronosLines = lines.filter(line =>
+        /[■☒✓✔]/.test(line) && /クロノス(?:\s*Performance|\s*リンク)?/i.test(line));
+    const integrationText = `${integration}\n${selectedXronosLines.join('\n')}`;
+    const integrations = [
+        ['クロノス|xronos', 'xronos'],
+        ['奉行クラウド|就業奉行', 'bugyo_cloud'],
+        ['就業大臣', 'daijin_auto'],
+        ['ジンジャー|jinjer', 'jinjer'],
+        ['勤労の獅子', 'kinro_shishi']
+    ];
+    const matchedIntegrations = integrations.filter(([pattern]) => new RegExp(pattern, 'i').test(integrationText));
+    if (matchedIntegrations.length === 1) add('sysAuthMethod', matchedIntegrations[0][1]);
+    add('xronosEmployeeMethod', /社員マスタ.{0,12}CSV|従業員.{0,8}CSV/i.test(integrationText) ? 'CSV'
+        : /社員マスタ.{0,12}API|従業員.{0,8}API/i.test(integrationText) ? 'API' : '');
+    add('xronosPunchMethod', /打刻データ.{0,12}CSV|打刻.{0,8}CSV/i.test(integrationText) ? 'CSV'
+        : /打刻データ.{0,12}API|打刻.{0,8}API/i.test(integrationText) ? 'API' : '');
+    const countValue = value => {
+        const match = normalizePdfOcrText(value).match(/\d[\d,]*/);
+        return match ? match[0].replace(/,/g, '') : '';
+    };
+    add('licCount', countValue(findPdfLabelValue(text, ['打刻端末ライセンス数', '打刻端末台数', '打刻台数', '端末台数', 'ライセンス数', 'ライセンス'])));
+    add('idCount', countValue(findPdfLabelValue(text, ['契約ID数', '利用可能従業員数', '利用者数', '従業員数'])));
+
+    const contractPeriod = findPdfLabelValue(text, ['契約期間', '利用期間']);
+    const periodDates = normalizePdfOcrText(contractPeriod).match(/20\d{2}\s*[年./\-]\s*\d{1,2}\s*[月./\-]\s*\d{1,2}/g) || [];
+    add('startDate', dateForPdfInput(findPdfLabelValue(text, ['サービス利用開始日', '契約開始日', '利用開始日', '利用開始']) || periodDates[0] || ''));
+    add('endDate', dateForPdfInput(findPdfLabelValue(text, ['契約終了日', '利用終了日', '利用終了']) || periodDates[1] || ''));
+    let visitDate = findPdfLabelValue(text, ['操作指導実施日', '操作指導日', '訪問日', '訪問希望日']);
+    const scheduleLine = lines.find(line =>
+        /\d{1,2}\s*月\s*\d{1,2}\s*日/.test(line)
+        && /(?:操作教育|操作指導|日時調整|商談時の引継ぎ事項|確定)/.test(line)
+        && /(?:\d{1,2}\s*時|[:：]\d{2})/.test(line));
+    if (!visitDate && scheduleLine) {
+        const scheduleDate = scheduleLine.match(/\d{1,2}\s*月\s*\d{1,2}\s*日/);
+        const documentYear = normalizedText.match(/20\d{2}/);
+        if (scheduleDate && documentYear) {
+            const dateParts = scheduleDate[0].match(/(\d{1,2})\s*月\s*(\d{1,2})/);
+            visitDate = `${documentYear[0]}年${dateParts[1]}月${dateParts[2]}日`;
+        }
+    }
+    add('visitDate', dateForPdfInput(visitDate));
+
+    const schedule = findPdfLabelValue(text, ['操作指導時間', '実施時間', '訪問時間']);
+    const scheduleTimes = normalizePdfOcrText(schedule).match(/(?:^|\D)(?:[01]?\d|2[0-3])[:：時][0-5]?\d?/g) || [];
+    const notedStartTime = scheduleLine && scheduleLine.match(/([01]?\d|2[0-3])\s*時(?:\s*([0-5]?\d)\s*分)?\s*開始/);
+    add('startTime', timeForPdfInput(findPdfLabelValue(text, ['開始時間', '開始時刻'])
+        || (notedStartTime ? `${notedStartTime[1]}:${notedStartTime[2] || '00'}` : '')
+        || scheduleTimes[0] || ''));
+    add('endTime', timeForPdfInput(findPdfLabelValue(text, ['終了時間', '終了時刻']) || scheduleTimes[1] || ''));
+    const visitAddress = findPdfLabelValue(text, ['実施場所住所', '訪問先住所', '操作指導場所', '住所']);
+    const postalCode = normalizedText.match(/〒\s*(\d{3})\s*[-ー－]\s*(\d{4})/);
+    if (company && postalCode) add('zip', `${postalCode[1]}-${postalCode[2]}`);
+    if (visitAddress) {
+        const address = normalizeOcrPageText(visitAddress)
+            .replace(/〒?\s*\d{3}[-ー－ ]?\d{4}\s*/, '')
+            .replace(/\s*[-ー－]\s*/g, '-');
+        add('address', address);
+    }
+
+    const companyFromRecipient = lines.find(line =>
+        /(?:株式会社|有限会社|合同会社|合名会社|合資会社|学校法人|医療法人|社会福祉法人|一般社団法人|一般財団法人)/.test(line)
+        && /(?:様|御中)$/.test(line));
+    const companyValue = cleanPdfOcrValue(company || companyFromRecipient || '').replace(/\s*印$/, '');
+    if (companyValue && /(?:株式会社|有限会社|合同会社|合名会社|合資会社|学校法人|医療法人|社会福祉法人|一般社団法人|一般財団法人)/.test(companyValue)) {
+        add('clientCompany', companyValue.replace(/[ 　]*(?:御中|様)$/, ''));
+    }
+    if (staff && staff.length <= 30) add('clientStaff', staff.replace(/[ 　]*(?:様|殿)$/, ''));
+
+    const authMethods = [];
+    let terminalLicenseCount = 0;
+    const authMethodLabels = [
+        ['顔認証（Windows）', 'faceWin'],
+        ['顔認証（iPad）', 'faceIpad'],
+        ['顔認証利用拠点数', 'faceunknown'],
+        ['手のひら静脈', 'palmWin'],
+        ['手のひら認証利用拠点数', 'palmWin'],
+        ['カメレオンコード（Windows）', 'icWin'],
+        ['カメレオンコード（iPad）', 'icIpad'],
+        ['カメレオンコード利用拠点数', 'icunknown']
+    ];
+    authMethodLabels.forEach(([label, method]) => {
+        const methodValue = findPdfLabelValue(text, [label]);
+        const methodCount = countValue(methodValue);
+        if (methodCount && !authMethods.includes(method)) {
+            authMethods.push(method);
+        }
+        if (methodCount && !/利用拠点数/.test(label)) terminalLicenseCount += Number(methodCount);
+    });
+    if (!values.licCount && terminalLicenseCount) add('licCount', String(terminalLicenseCount));
+    if (/スマホ打刻|モバイル打刻/.test(normalizedText) && /有効化|利用|打刻/.test(normalizedText)) {
+        authMethods.push('mobileUnknown');
+    }
+    if (authMethods.length) values.authMethods = authMethods;
+
+    const visitMethod = findPdfLabelValue(text, ['実施方法']);
+    if (/訪問/.test(visitMethod)) values.visitMethod = 'visit';
+    else if (/WEB|オンライン/i.test(visitMethod)) values.visitMethod = 'web';
+    return values;
+}
+
+async function importColorecoPdf() {
+    const fileInput = document.getElementById('colorecoPdfFile');
+    const importButton = document.getElementById('colorecoPdfImport');
+    const status = document.getElementById('colorecoPdfStatus');
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) {
+        status.textContent = '先にPDFファイルを選択してください。';
+        return;
+    }
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+        status.textContent = 'PDFファイルを選択してください。';
+        return;
+    }
+
+    importButton.disabled = true;
+    try {
+        status.textContent = 'PDFを開いています。';
+        await loadPdfOcrLibrary('pdfjs');
+        const pdf = await window.pdfjsLib.getDocument({
+            data: new Uint8Array(await file.arrayBuffer()),
+            isEvalSupported: false
+        }).promise;
+        let worker = null;
+        let recognizedText = '';
+        try {
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                status.textContent = `PDFを読み取っています（${pageNumber}/${pdf.numPages}ページ）...`;
+                const page = await pdf.getPage(pageNumber);
+                const pageText = getPdfPageText((await page.getTextContent()).items);
+                if (pageText.replace(/\s/g, '').length >= 30) {
+                    recognizedText += `\n${pageText}`;
+                    continue;
+                }
+
+                if (!worker) {
+                    status.textContent = 'OCRライブラリと日本語データを読み込んでいます。初回は少し時間がかかります。';
+                    await loadPdfOcrLibrary('tesseract');
+                    worker = await Tesseract.createWorker('jpn', 1, {
+                        workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+                        corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/tesseract-core.wasm.js',
+                        langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+                        gzip: true
+                    });
+                }
+                const viewport = page.getViewport({ scale: 3 });
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.ceil(viewport.width);
+                canvas.height = Math.ceil(viewport.height);
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                const result = await worker.recognize(canvas);
+                recognizedText += `\n${normalizeOcrPageText(result.data.text)}`;
+                canvas.width = 0;
+                canvas.height = 0;
+            }
+        } finally {
+            if (worker) await worker.terminate();
+            await pdf.destroy();
+        }
+
+        const values = getColorecoPdfValues(recognizedText);
+        const defaults = {
+            sysAuthMethod: 'none',
+            xronosEmployeeMethod: 'API',
+            xronosPunchMethod: 'API',
+            startTime: '10:00',
+            endTime: '15:00'
+        };
+        const canFill = id => {
+            const field = document.getElementById(id);
+            return !field.value || field.value === defaults[id];
+        };
+        const matched = Object.entries(values).filter(([id]) =>
+            id !== 'authMethods' && id !== 'visitMethod' && canFill(id));
+        matched.forEach(([id, value]) => {
+            document.getElementById(id).value = value;
+        });
+
+        if (values.authMethods) {
+            const authInputs = Array.from(document.querySelectorAll('#authMethod input[type="checkbox"]'));
+            const selectedAuthMethods = authInputs.filter(input => input.checked).map(input => input.value);
+            if (selectedAuthMethods.length === 1 && selectedAuthMethods[0] === 'faceWin') {
+                authInputs.forEach(input => { input.checked = false; });
+            }
+            values.authMethods.forEach(method => {
+                const input = document.querySelector(`#authMethod input[value="${method}"]`);
+                if (input && !input.checked) {
+                    input.checked = true;
+                    matched.push([`authMethod:${method}`, method]);
+                }
+            });
+        }
+
+        if (values.visitMethod) {
+            const visitInput = document.querySelector(`input[name="visitMethod"][value="${values.visitMethod}"]`);
+            if (visitInput && !visitInput.checked) {
+                visitInput.checked = true;
+                matched.push(['visitMethod', values.visitMethod]);
+            }
+        }
+
+        const integrationField = document.getElementById('sysAuthMethod');
+        if (values.sysAuthMethod === 'xronos'
+            && (integrationField.value === 'xronos' || matched.some(([id]) => id === 'sysAuthMethod'))) {
+            const employeeMethod = document.getElementById('xronosEmployeeMethod');
+            const punchMethod = document.getElementById('xronosPunchMethod');
+            const employeeValue = values.xronosEmployeeMethod || 'API';
+            const punchValue = values.xronosPunchMethod || (employeeValue === 'CSV' ? 'CSV' : 'API');
+            if (canFill('xronosEmployeeMethod') && employeeMethod.value !== employeeValue) {
+                employeeMethod.value = employeeValue;
+                matched.push(['xronosEmployeeMethod', employeeValue]);
+            }
+            if (canFill('xronosPunchMethod') && punchMethod.value !== punchValue) {
+                punchMethod.value = punchValue;
+                matched.push(['xronosPunchMethod', punchValue]);
+            }
+        }
+        if (matched.length) {
+            toggleXronosMethodFields();
+            toggleColorecoPalmShipmentFields();
+            toggleVitalShipmentFields();
+            generate();
+            status.textContent = `${matched.length}項目を入力しました。読み取り結果を確認してください。入力済みの欄は上書きしていません。`;
+        } else {
+            status.textContent = '入力できる項目を特定できませんでした。PDFの文字が鮮明か確認し、必要項目を手入力してください。';
+        }
+    } catch (error) {
+        console.error('導入支援PDFの読み取りに失敗しました。', error);
+        status.textContent = `PDFを読み取れませんでした。${error.message || 'ファイル形式や通信状態を確認してください。'}`;
+    } finally {
+        importButton.disabled = false;
+    }
 }
 
 window.onload = () => {
